@@ -1,0 +1,209 @@
+
+\documentclass[conference]{IEEEtran}
+\usepackage{blindtext, graphicx}
+
+% correct bad hyphenation here
+\hyphenation{op-tical net-works semi-conduc-tor}
+
+
+\begin{document}
+%
+% paper title
+% can use linebreaks \\ within to get better formatting as desired
+\title{Loop Device Performance Overhead for Constraining Batch Job Tasks}
+
+
+% author names and affiliations
+% use a multiple column layout for up to three different
+% affiliations
+\author{\IEEEauthorblockN{Nathaniel Kremer-Herman}
+\IEEEauthorblockA{Department of Computer Science and Engineering\\University of Notre Dame\\
+Email: nkremerh@nd.edu}}
+
+
+% make the title area
+\maketitle
+
+
+\begin{abstract}
+%\boldmath
+Providing a resource-constrained sandbox for batch job tasks is a need which has been rising in importance within distributed computing. In many cases, the batch jobs being scheduled are sent to machines which the submitter does not own. Without resource usage guarantees, there is the potential that a task will consume more resources than desired. This may come at the cost of decreasing the availability of the host machine for future work. Or worse, the task may inadvertently take advantage of a flaw which can damage the host machine in an irreparable manner. Presented in this report is a method to keep a batch job task within a secure sandbox constrained by an arbitrary disk size with reasonable performance guarantees as compared to the task executing on the host machine's native filesystem.
+\end{abstract}
+
+\IEEEpeerreviewmaketitle
+
+
+
+\section{Introduction}
+Currently, batch job task execution occurs in sandboxes which prevent a task from interfering with host processes. However, a sandbox namespace is not a strict enough mechanism to prevent storage exhaustion. A popular method of providing resource constraint is to run a sentinel process which periodically watches a task and alerts the batch system when that task has used more resources than it initially requested. However, this provides only an after-the-fact assessment of the task's resource usage. There is not much support in POSIX to instantaneously handle storage exhaustion, but Linux loop devices provide passive storage constraint of a sandbox. Loop device storage constraint is useful for both the owner of the host machine and the user running a batch job task. In a loop device sandbox, a task cannot progress once it has used the storage space available to the device. This prevents the problem of storage exhaustion from impacting other tasks since the task is in its own namespace. It also prevents a task from consuming enough disk space to make the host machine unavailable for future incoming work.
+
+The primary motivation for using loop devices to constrain tasks is to ensure that each one has exactly as much space as it needs to complete while also preventing the task from consuming more space than it has been allotted. Without loop devices, a task using more storage than it requested may affect the availability of the host system for future work since it may use up all remaining storage on the host machine. By creating a loop device, the task establishes a sandbox that has an arbitrary size. Not only does this method guarantee disk space {\it{for}} the task, it also ensures a greater level of security for the host system {\it{from}} the batch job task. This added security is derived from a lower impact of failure due to storage exhaustion. 
+
+\section{Loop Device Resource Sandbox}
+A loop device is classified as a pseudo-device meaning it is represented as a normal file in the filesystem, but it can be mounted and treated as a physical device. This is the key factor which provides the resource constraint to the sandbox. Because a loop device is treated like any other physical device on the system, it has a maximum capacity. This is equivalent to the size of the file mounted as the loop device. Once a task running within the loop device reaches that maximum capacity, there are no other resources with which that task can run. This provides a hard limit to the disk space a task can consume.
+
+\subsection{Runtime Expectations}
+Once a loop device is mounted and prepared to handle I/O requests, a batch job task can now be placed within by setting its working directory to the path of the file which was created to serve as the mountpoint of the device. Once the task is within this newly-created sandbox, it is constrained to a maximum size equivalent to the size of the mounted file. Because of this, a task cannot use more disk space than was allocated, and any inappropriate access to disk space will not be permitted. This is further reinforced by the fact that the host operating system views a loop device like any other physical device and will treat its file size as if it were a storage capacity imposed by physical limitations.
+
+The fact that a loop device is treated as a separate physical device provides a barrier between the batch job task's execution environment and the host machine's native filesystem. In the case of extreme failure, the task will not harm the native filesystem but instead will cause damage to the integrity of the loop device. This can be remedied by simply deallocating the loop device.
+
+\section{Implementation}
+
+\subsection{Allocation}
+To allocate a loop device, one must first create a file filled with arbitrary data up to a specified size. This is accomplished by executing a command like {\tt{dd}} in Linux systems. Following the creation of this file, it is bound to an available loop device using the {\tt{losetup}} Linux comand. The operating system of our test platform has eight available loop devices by default with the option to allow up to 256. This allows for 256 resource constrained tasks to run concurrently. Following this step, a new filesystem is instantiated on the loop device. Finally, the loop device is mounted, after which it is ready for I/O.
+
+\subsection{Deallocation}
+The deallocation of a loop device is simpler than its setup. First, one must unmount the loop device via the invocation of the {\tt{umount}} command. Then the file used as the mountpoint is unbound from its associated loop device. The file is once again visible to the native filesystem and is removed.
+
+\subsection{Library Implementation}
+We have simplified the allocation and deallocation of loop devices with the creation of a new library consisting of two functions, {\tt{disk\_alloc\_create}} and {\tt{disk\_alloc\_delete}} which handle the creation and deletion of a loop device respectively. This library is implemented in the CCTools software suite within the Work Queue batch system and the Makeflow workflow management system.
+
+In Work Queue, a batch job task first instantiates a loop device on the host machine as an execution sandbox. Once the device is set up, the task may begin its work and will continue to do so until it either completes successfully or runs out of space at which point it will fail. Regardless whether the task is successful or not, it will then clean up its workspace by deallocating the loop device and removing its working directory.
+
+A task's resource requirements are specified within a makeflow. These constraints include the number of cores the task will utilize, the amount of memory it requires, and the amount of disk space it will consume. The disk allocation library is passed the disk space requirements from the makeflow via Work Queue. This disk space requirement is used as the size of the loop device.
+
+\section{Evaluation}
+In order to properly capture the relevant performance characteristics of loop devices as compared to the native filesystem, the evaluation of the library consists of standard micro-benchmarks which test throughput performance.
+
+\subsection{Metrics}
+We measured the performance of loop device allocations compared to a native filesystem with three micro-benchmarks: read, write, and file metadata throughput. Our test platform has the following specifications: 3GB RAM, 2 x Intel Core 2 Duo processors, 250GB SATA drive (16 heads, 7,200 RPM, 16,383 cylinders, 63 sectors/track, queue depth 32, max I/O data transfer rate 300 MB/s, max sustained data transfer rate 125 MB/s, internal data transfer rate 1,695 Mb/s). We measured sequential read and sequential write throughput of a file 95\% of its allocation size. Metadata throughput was measured by timing a loop device's creation of 10,000 blank files, retrieving file status on each file, then deleting each file. We tested these micro-benchmarks across three filesystems: ext2, ext3, and ext4 which are commonly available. 
+
+Each micro-benchmark test ran for twenty iterations then created a nested loop device within the current device. This process was completed twenty times resulting in a loop device nested within twenty other loop devices. This nesting shows a reduction in device performance the deeper the device is nested. Though nesting a loop device within another is feasible in terms of performance, it is not the expected behavior of a workflow. Regardless, we demonstrate that an entire workflow can run within a storage container and still perform reasonably. The aim of these micro-benchmarks was to demonstrate that a loop device does not experience a steep performance decline in order to provide a resource guarantee for a workflow task. We have provided the first ten iterations of the test as they are most pertinent.
+
+\subsection{Performance}
+The results presented in subsequent pages display the median value across each nest depth with the respective median absolute deviation. This format was chosen in order to present the most accurate representation of loop device performance. The performance of a loop device mounted with the any of the ext family filesystems performs comparably in many cases with the native filesystem. The native filesystem of our test platform is ext4. By using non-trivial sizes for the test allocations (in the order of GBs), our micro-benchmarks simulate sustained I/O expected of a batch job task completing a realistic work load. This is opposed to burst I/O which would be seen in tasks smaller than 1GB. 
+
+Since the majority of workflows execute within a nest depth of zero, the most pertinent results are located within the first few nest depths. The rare case of a nested loop device task would occur if a batch job task executed another workflow locally. For added perspective, we have provided the performance results down to a nest level of ten. This would be indicative of the performance of a task recursively executing ten separate workflows locally. 
+We examine the MB/s throughput of the device in the read and write micro-benchmarks at each nest depth (from the native filesystem to a loop device nest depth of ten).
+
+ We note an equivalent performance to the native filesystem with a nest depth of zero (a single loop device) in the read micro-benchmark. As nest depth increases, there is a linear decrease in read speed. We demonstrate that the resource constraint provided by loop devices does not come at the cost of performance for most cases. Should a user execute a workflow which would make use of nested loop devices, they must consider the nest depth at which they see diminishing returns. Reasonable, though not comparable, performance can be expected within the first four nest levels of loop devices after which read performance begins to become more lackluster compared to the native filesystem.
+
+Write performance maintains comparable performance to the native filesystem at a deeper nest level than read performance. However, there is a sharper degradation in performance once a nest depth of four is reached. Similar to the read performance, the user would have to consider the added cost of resource guarantees and constraint if their workflow will execute at higher nest depths. 
+
+We note that the metadata micro-benchmark's performance is notably faster for the first four depth levels due to the asynchronous operation of loop devices. This behavior is enabled by default. Since metadata performance is measured by how quickly 10,000 empty files are instantiated, we note this asynchronous batching method is quicker for metadata operations. As is the case with the other two micro-benchmakrs, the metadata performance of a loop device relative to the native filesystem drops off at higher nest levels. In our metadata testing, this drop off occurs at a nest depth of five. Like in the read and write results, the user would have to determine if the slower performance is worth the resource guarantees should their workflow execute at high nest depths.
+
+\subsection{Impact of Failure}
+Loop devices allow for a task to fail more cleanly than if it were not in a strict sandbox. The integrity of the host filesystem is not in as much danger of compromise. In the case of a failure, the loop device may become corrupted and unusable. In this case, the solution is to unmount and remove the loop device. This provides a benefit to the owner of the failed batch job task since the host machine will still be available for future work. Considering an incident without loop devices being used, it is possible that extreme failure can cause problems with the host filesystem precisely because the task is not isolated within its own storage constrained sandbox. All but the most catastrophic failures are contained within a loop device, and it exits cleanly.
+
+\section{Conclusion}
+Though resource constraint does not have much support, we present a novel method of constraining the storage usage of a batch job task through the use of loop devices. Loop devices, as opposed to a sentinel process, provide an instantaneous handling of storage exhaustion. This passive method of constraint keeps a task within its requested storage. This in turns prevents the task from using up enough space to affect the availability of the host machine for future work. We have shown that loop devices provide these benefits with a reasonable performance guarantee.
+
+\newpage
+\begin{figure*}[t]
+\begin{center}$
+\begin{array}{ccc}
+	\includegraphics[width=0.3\textwidth]{read_ext2_2GB.pdf}&
+	\includegraphics[width=0.3\textwidth]{write_ext2_2GB.pdf}&
+	\includegraphics[width=0.3\textwidth]{meta_ext2_2GB.pdf}
+\end{array}$
+\end{center}
+	\caption{Loop Device Performance of ext2 Filesystem with 2GB Allocations}
+	\label{fig:loop_ext2_2gb}
+\end{figure*}
+
+\begin{figure*}[t]
+\begin{center}$
+\begin{array}{ccc}
+	\includegraphics[width=0.3\textwidth]{read_ext3_2GB.pdf}&
+	\includegraphics[width=0.3\textwidth]{write_ext3_2GB.pdf}&
+	\includegraphics[width=0.3\textwidth]{meta_ext3_2GB.pdf}
+\end{array}$
+\end{center}
+	\caption{Loop Device Performance of ext3 Filesystem with 2GB Allocations}
+	\label{fig:loop_ext3_2gb}
+\end{figure*}
+
+\begin{figure*}[t]
+\begin{center}$
+\begin{array}{ccc}
+	\includegraphics[width=0.3\textwidth]{read_ext4_2GB.pdf}&
+	\includegraphics[width=0.3\textwidth]{write_ext4_2GB.pdf}&
+	\includegraphics[width=0.3\textwidth]{meta_ext4_2GB.pdf}
+\end{array}$
+\end{center}
+	\caption{Loop Device Performance of ext4 Filesystem with 2GB Allocations}
+	\label{fig:loop_ext4_2gb}
+\end{figure*}
+
+\clearpage
+\begin{figure*}[t]
+\begin{center}$
+\begin{array}{ccc}
+	\includegraphics[width=0.3\textwidth]{read_ext2_4GB.pdf}&
+	\includegraphics[width=0.3\textwidth]{write_ext2_4GB.pdf}&
+	\includegraphics[width=0.3\textwidth]{meta_ext2_4GB.pdf}
+\end{array}$
+\end{center}
+	\caption{Loop Device Performance of ext2 Filesystem with 4GB Allocations}
+	\label{fig:loop_ext2_4gb}
+\end{figure*}
+
+\begin{figure*}[t]
+\begin{center}$
+\begin{array}{ccc}
+	\includegraphics[width=0.3\textwidth]{read_ext3_4GB.pdf}&
+	\includegraphics[width=0.3\textwidth]{write_ext3_4GB.pdf}&
+	\includegraphics[width=0.3\textwidth]{meta_ext3_4GB.pdf}
+\end{array}$
+\end{center}
+	\caption{Loop Device Performance of ext3 Filesystem with 4GB Allocations}
+	\label{fig:loop_ext3_4gb}
+\end{figure*}
+
+\begin{figure*}[t]
+\begin{center}$
+\begin{array}{ccc}
+	\includegraphics[width=0.3\textwidth]{read_ext4_4GB.pdf}&
+	\includegraphics[width=0.3\textwidth]{write_ext4_4GB.pdf}&
+	\includegraphics[width=0.3\textwidth]{meta_ext4_4GB.pdf}
+\end{array}$
+\end{center}
+	\caption{Loop Device Performance of ext4 Filesystem with 4GB Allocations}
+	\label{fig:loop_ext4_4gb}
+\end{figure*}
+
+\clearpage
+\begin{figure*}[t]
+\begin{center}$
+\begin{array}{ccc}
+	\includegraphics[width=0.3\textwidth]{read_ext2_8GB.pdf}&
+	\includegraphics[width=0.3\textwidth]{write_ext2_8GB.pdf}&
+	\includegraphics[width=0.3\textwidth]{meta_ext2_8GB.pdf}
+\end{array}$
+\end{center}
+	\caption{Loop Device Performance of ext2 Filesystem with 8GB Allocations}
+	\label{fig:loop_ext2_8gb}
+\end{figure*}
+
+\begin{figure*}[t]
+\begin{center}$
+\begin{array}{ccc}
+	\includegraphics[width=0.3\textwidth]{read_ext3_8GB.pdf}&
+	\includegraphics[width=0.3\textwidth]{write_ext3_8GB.pdf}&
+	\includegraphics[width=0.3\textwidth]{meta_ext3_8GB.pdf}
+\end{array}$
+\end{center}
+	\caption{Loop Device Performance of ext3 Filesystem with 8GB Allocations}
+	\label{fig:loop_ext3_8gb}
+\end{figure*}
+
+\begin{figure*}[t]
+\begin{center}$
+\begin{array}{ccc}
+	\includegraphics[width=0.3\textwidth]{read_ext4_8GB.pdf}&
+	\includegraphics[width=0.3\textwidth]{write_ext4_8GB.pdf}&
+	\includegraphics[width=0.3\textwidth]{meta_ext4_8GB.pdf}
+\end{array}$
+\end{center}
+	\caption{Loop Device Performance of ext4 Filesystem with 8GB Allocations}
+	\label{fig:loop_ext4_8gb}
+\end{figure*}
+% Can use something like this to put references on a page
+% by themselves when using endfloat and the captionsoff option.
+\ifCLASSOPTIONcaptionsoff
+  \newpage
+\fi
+
+\end{document}
+
+
