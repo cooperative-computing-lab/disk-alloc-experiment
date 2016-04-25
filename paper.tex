@@ -1,6 +1,11 @@
 
 \documentclass[conference]{IEEEtran}
 \usepackage{blindtext, graphicx}
+\usepackage{amsmath}
+\usepackage{algorithmic}
+\usepackage{framed}
+\usepackage{floatrow}
+\usepackage{comment}
 
 % correct bad hyphenation here
 \hyphenation{op-tical net-works semi-conduc-tor}
@@ -10,7 +15,7 @@
 %
 % paper title
 % can use linebreaks \\ within to get better formatting as desired
-\title{Loop Device Performance Overhead for Constraining Batch Job Tasks}
+\title{Loop Device Performance Overhead for Constraining Batch Job Tasks:\\A Technical Report and Experiment in Metascience}
 
 
 % author names and affiliations
@@ -71,7 +76,7 @@ We measured the performance of loop device allocations compared to a native file
 Each micro-benchmark test ran for twenty iterations then created a nested loop device within the current device. This process was completed twenty times resulting in a loop device nested within twenty other loop devices. This nesting shows a reduction in device performance the deeper the device is nested. Though nesting a loop device within another is feasible in terms of performance, it is not the expected behavior of a workflow. Regardless, we demonstrate that an entire workflow can run within a storage container and still perform reasonably. The aim of these micro-benchmarks was to demonstrate that a loop device does not experience a steep performance decline in order to provide a resource guarantee for a workflow task. We have provided the first ten iterations of the test as they are most pertinent.
 
 \subsection{Performance}
-The results presented in subsequent pages display the median value across each nest depth with the respective median absolute deviation. This format was chosen in order to present the most accurate representation of loop device performance. The performance of a loop device mounted with the any of the ext family filesystems performs comparably in many cases with the native filesystem. The native filesystem of our test platform is ext4. By using non-trivial sizes for the test allocations (in the order of GBs), our micro-benchmarks simulate sustained I/O expected of a batch job task completing a realistic work load. This is opposed to burst I/O which would be seen in tasks smaller than 1GB. 
+The results presented in Figures \ref{fig:2gb}, \ref{fig:4gb}, and \ref{fig:8gb} display the median value across each nest depth with the respective median absolute deviation. This format was chosen in order to present the most accurate representation of loop device performance. The performance of a loop device mounted with the any of the ext family filesystems performs comparably in many cases with the native filesystem. The native filesystem of our test platform is ext4. By using non-trivial sizes for the test allocations (in the order of GBs), our micro-benchmarks simulate sustained I/O expected of a batch job task completing a realistic work load. This is opposed to burst I/O which would be seen in tasks smaller than 1GB. 
 
 Since the majority of workflows execute within a nest depth of zero, the most pertinent results are located within the first few nest depths. The rare case of a nested loop device task would occur if a batch job task executed another workflow locally. For added perspective, we have provided the performance results down to a nest level of ten. This would be indicative of the performance of a task recursively executing ten separate workflows locally. 
 We examine the MB/s throughput of the device in the read and write micro-benchmarks at each nest depth (from the native filesystem to a loop device nest depth of ten).
@@ -89,115 +94,38 @@ Loop devices allow for a task to fail more cleanly than if it were not in a stri
 Though resource constraint does not have much support, we present a novel method of constraining the storage usage of a batch job task through the use of loop devices. Loop devices, as opposed to a sentinel process, provide an instantaneous handling of storage exhaustion. This passive method of constraint keeps a task within its requested storage. This in turns prevents the task from using up enough space to affect the availability of the host machine for future work. We have shown that loop devices provide these benefits with a reasonable performance guarantee.
 
 \newpage
+\newcommand{\cimage}[1]{$\vcenter{\hbox{\includegraphics[width=0.3\textwidth]{#1}}}$}
+
 \begin{figure*}[t]
-\begin{center}$
-\begin{array}{ccc}
-	\includegraphics[width=0.3\textwidth]{read_ext2_2GB.pdf}&
-	\includegraphics[width=0.3\textwidth]{write_ext2_2GB.pdf}&
-	\includegraphics[width=0.3\textwidth]{meta_ext2_2GB.pdf}
-\end{array}$
-\end{center}
-	\caption{Loop Device Performance of ext2 Filesystem with 2GB Allocations}
-	\label{fig:loop_ext2_2gb}
+\begin{tabular}{cccc}
+ext2 & \cimage{read_ext2_2GB.pdf} & \cimage{write_ext2_2GB.pdf} & \cimage{meta_ext2_2GB.pdf}\\
+ext3 & \cimage{read_ext3_2GB.pdf} & \cimage{write_ext3_2GB.pdf} & \cimage{meta_ext3_2GB.pdf}\\
+ext4 & \cimage{read_ext4_2GB.pdf} & \cimage{write_ext4_2GB.pdf} & \cimage{meta_ext4_2GB.pdf}\\
+\end{tabular}
+\label{fig:2gb}
+\caption{Loop Device Performance with 2GB Allocations}
 \end{figure*}
 
 \begin{figure*}[t]
-\begin{center}$
-\begin{array}{ccc}
-	\includegraphics[width=0.3\textwidth]{read_ext3_2GB.pdf}&
-	\includegraphics[width=0.3\textwidth]{write_ext3_2GB.pdf}&
-	\includegraphics[width=0.3\textwidth]{meta_ext3_2GB.pdf}
-\end{array}$
-\end{center}
-	\caption{Loop Device Performance of ext3 Filesystem with 2GB Allocations}
-	\label{fig:loop_ext3_2gb}
+\begin{tabular}{cccc}
+ext2 & \cimage{read_ext2_4GB.pdf} & \cimage{write_ext2_4GB.pdf} & \cimage{meta_ext2_4GB.pdf}\\
+ext3 & \cimage{read_ext3_4GB.pdf} & \cimage{write_ext3_4GB.pdf} & \cimage{meta_ext3_4GB.pdf}\\
+ext4 & \cimage{read_ext4_4GB.pdf} & \cimage{write_ext4_4GB.pdf} & \cimage{meta_ext4_4GB.pdf}\\
+\end{tabular}
+\label{fig:4gb}
+\caption{Loop Device Performance with 4GB Allocations}
 \end{figure*}
 
 \begin{figure*}[t]
-\begin{center}$
-\begin{array}{ccc}
-	\includegraphics[width=0.3\textwidth]{read_ext4_2GB.pdf}&
-	\includegraphics[width=0.3\textwidth]{write_ext4_2GB.pdf}&
-	\includegraphics[width=0.3\textwidth]{meta_ext4_2GB.pdf}
-\end{array}$
-\end{center}
-	\caption{Loop Device Performance of ext4 Filesystem with 2GB Allocations}
-	\label{fig:loop_ext4_2gb}
+\begin{tabular}{cccc}
+ext2 & \cimage{read_ext2_8GB.pdf} & \cimage{write_ext2_8GB.pdf} & \cimage{meta_ext2_8GB.pdf}\\
+ext3 & \cimage{read_ext3_8GB.pdf} & \cimage{write_ext3_8GB.pdf} & \cimage{meta_ext3_8GB.pdf}\\
+ext4 & \cimage{read_ext4_8GB.pdf} & \cimage{write_ext4_8GB.pdf} & \cimage{meta_ext4_8GB.pdf}\\
+\end{tabular}
+\label{fig:8gb}
+\caption{Loop Device Performance with 8GB Allocations}
 \end{figure*}
 
-\clearpage
-\begin{figure*}[t]
-\begin{center}$
-\begin{array}{ccc}
-	\includegraphics[width=0.3\textwidth]{read_ext2_4GB.pdf}&
-	\includegraphics[width=0.3\textwidth]{write_ext2_4GB.pdf}&
-	\includegraphics[width=0.3\textwidth]{meta_ext2_4GB.pdf}
-\end{array}$
-\end{center}
-	\caption{Loop Device Performance of ext2 Filesystem with 4GB Allocations}
-	\label{fig:loop_ext2_4gb}
-\end{figure*}
-
-\begin{figure*}[t]
-\begin{center}$
-\begin{array}{ccc}
-	\includegraphics[width=0.3\textwidth]{read_ext3_4GB.pdf}&
-	\includegraphics[width=0.3\textwidth]{write_ext3_4GB.pdf}&
-	\includegraphics[width=0.3\textwidth]{meta_ext3_4GB.pdf}
-\end{array}$
-\end{center}
-	\caption{Loop Device Performance of ext3 Filesystem with 4GB Allocations}
-	\label{fig:loop_ext3_4gb}
-\end{figure*}
-
-\begin{figure*}[t]
-\begin{center}$
-\begin{array}{ccc}
-	\includegraphics[width=0.3\textwidth]{read_ext4_4GB.pdf}&
-	\includegraphics[width=0.3\textwidth]{write_ext4_4GB.pdf}&
-	\includegraphics[width=0.3\textwidth]{meta_ext4_4GB.pdf}
-\end{array}$
-\end{center}
-	\caption{Loop Device Performance of ext4 Filesystem with 4GB Allocations}
-	\label{fig:loop_ext4_4gb}
-\end{figure*}
-
-\clearpage
-\begin{figure*}[t]
-\begin{center}$
-\begin{array}{ccc}
-	\includegraphics[width=0.3\textwidth]{read_ext2_8GB.pdf}&
-	\includegraphics[width=0.3\textwidth]{write_ext2_8GB.pdf}&
-	\includegraphics[width=0.3\textwidth]{meta_ext2_8GB.pdf}
-\end{array}$
-\end{center}
-	\caption{Loop Device Performance of ext2 Filesystem with 8GB Allocations}
-	\label{fig:loop_ext2_8gb}
-\end{figure*}
-
-\begin{figure*}[t]
-\begin{center}$
-\begin{array}{ccc}
-	\includegraphics[width=0.3\textwidth]{read_ext3_8GB.pdf}&
-	\includegraphics[width=0.3\textwidth]{write_ext3_8GB.pdf}&
-	\includegraphics[width=0.3\textwidth]{meta_ext3_8GB.pdf}
-\end{array}$
-\end{center}
-	\caption{Loop Device Performance of ext3 Filesystem with 8GB Allocations}
-	\label{fig:loop_ext3_8gb}
-\end{figure*}
-
-\begin{figure*}[t]
-\begin{center}$
-\begin{array}{ccc}
-	\includegraphics[width=0.3\textwidth]{read_ext4_8GB.pdf}&
-	\includegraphics[width=0.3\textwidth]{write_ext4_8GB.pdf}&
-	\includegraphics[width=0.3\textwidth]{meta_ext4_8GB.pdf}
-\end{array}$
-\end{center}
-	\caption{Loop Device Performance of ext4 Filesystem with 8GB Allocations}
-	\label{fig:loop_ext4_8gb}
-\end{figure*}
 % Can use something like this to put references on a page
 % by themselves when using endfloat and the captionsoff option.
 \ifCLASSOPTIONcaptionsoff

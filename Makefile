@@ -1,6 +1,7 @@
 CC=gcc
 CFLAGS=-Wall -g -lm
 AR=ar
+DTTOOLS = ./cctools-source/dttools/src
 
 OBJ = \
 	./src/test.o \
@@ -59,14 +60,24 @@ DATA = \
 
 PAPER = ./paper.pdf
 LIB = ./src/libtest.a
+#LIB = ./cctools-source/dttools/src/libdttools.a
 PROG = ./src/test
 TAR = $(LIB) $(PROG)
 
-all: $(TAR)
+all: $(PAPER)
+
+$(LIB):
 	git clone git@github.com:nkremerh/cctools -b disk_alloc_fix
 	mv ./cctools ./cctools-source
 	cd ./cctools-source && ./configure && make all
-	cp $(SRC) ./src/
+	$(AR) -rv $(LIB) $(SRC)
+	ranlib $(LIB)
+#	cp $(SRC) ./src/
+
+$(PROG): $(LIB)
+	$(CC) $(CFLAGS) $^ -I $(DTTOOLS) ./src/test.c -o $@
+
+$(DATA): $(PROG)
 	sudo $(PROG) ext4
 	mv ./out.dat ./out_ext4.dat
 	mv ./out_raw.dat ./out_raw_ext4.dat
@@ -82,13 +93,15 @@ all: $(TAR)
 	mv ./out_raw.dat ./out_raw_ext2.dat
 	mv ./out_empty.dat ./out_empty_ext2.dat
 	mv ./out_raw_empty.dat ./out_raw_empty_ext2.dat
+
+#$(LIB):
+	
+
+$(MID_GRAPHS): $(DATA)
 	perl ./generate_graph_data ./out_raw_ext4.dat ./out_final_ext4
 	perl ./generate_graph_data ./out_raw_ext3.dat ./out_final_ext3
 	perl ./generate_graph_data ./out_raw_ext2.dat ./out_final_ext2
-	gnuplot ./plot_results.gnuplot
-	$(PAPER)
-
-
+	gnuplot ./plot_results.gnuplot 
 
 %.pdf: %.eps
 	epstopdf $< --outfile=$@
@@ -96,20 +109,15 @@ all: $(TAR)
 $(PAPER): ./paper.tex $(GRAPHS)
 	pdflatex ./paper.tex
 
-$(LIB): $(OBJ)
-	$(AR) -rv $(LIB) $(OBJ)
-	ranlib $(LIB)
-
-$(PROG): $(LIB)
-	$(CC) $(CFLAGS) $^ -o $@
-
 paper: $(PAPER)
 
-graphs: $(DATA)
-	perl ./generate_graph_data ./out_raw_ext4.dat ./out_final_ext4
-	perl ./generate_graph_data ./out_raw_ext3.dat ./out_final_ext3
-	perl ./generate_graph_data ./out_raw_ext2.dat ./out_final_ext2
-	gnuplot ./plot_results.gnuplot 
+graphs: $(GRAPHS)
+
+mid_graphs: $(MID_GRAPHS)
+
+build: $(LIB) $(PROG)
+
+test: $(DATA)
 
 clean lean celan:
 	rm -rf $(OBJ) $(TAR) $(MID_DATA) $(MID_GRAPHS) $(GRAPHS) ./paper.aux ./paper.log ./cctools-source ./cctools
