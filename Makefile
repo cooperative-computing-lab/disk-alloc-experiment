@@ -1,21 +1,9 @@
 CC=gcc
-CFLAGS=-Wall -g -lm
+CFLAGS=-Wall -g
 AR=ar
 DTTOOLS = ./cctools-source/dttools/src
+LDDFLAGS = -L./cctools-source/dttools/src -ldttools -lm
 
-OBJ = \
-	./src/test.o \
-	./src/disk_alloc.o \
-	./src/stringtools.o \
-	./src/path.o \
-	./src/xxmalloc.o
-
-SRC = \
-	./cctools-source/dttools/src/disk_alloc.o \
-	./cctools-source/dttools/src/stringtools.o \
-	./cctools-source/dttools/src/path.o \
-	./cctools-source/dttools/src/xxmalloc.o
-	
 GRAPHS = \
 	./meta_ext2_2GB.pdf \
 	./meta_ext2_4GB.pdf \
@@ -46,9 +34,33 @@ GRAPHS = \
 	./write_ext4_8GB.pdf
 
 MID_GRAPHS = \
-	./meta_*.eps \
-	./read_*.eps \
-	./write_*.eps
+	./meta_ext2_2GB.eps \
+	./meta_ext2_4GB.eps \
+	./meta_ext2_8GB.eps \
+	./meta_ext3_2GB.eps \
+	./meta_ext3_4GB.eps \
+	./meta_ext3_8GB.eps \
+	./meta_ext4_2GB.eps \
+	./meta_ext4_4GB.eps \
+	./meta_ext4_8GB.eps \
+	./read_ext2_2GB.eps \
+	./read_ext2_4GB.eps \
+	./read_ext2_8GB.eps \
+	./read_ext3_2GB.eps \
+	./read_ext3_4GB.eps \
+	./read_ext3_8GB.eps \
+	./read_ext4_2GB.eps \
+	./read_ext4_4GB.eps \
+	./read_ext4_8GB.eps \
+	./write_ext2_2GB.eps \
+	./write_ext2_4GB.eps \
+	./write_ext2_8GB.eps \
+	./write_ext3_2GB.eps \
+	./write_ext3_4GB.eps \
+	./write_ext3_8GB.eps \
+	./write_ext4_2GB.eps \
+	./write_ext4_4GB.eps \
+	./write_ext4_8GB.eps
 
 MID_DATA = \
 	./out_*.dat
@@ -59,12 +71,11 @@ DATA = \
 	./out_raw_ext4.dat
 
 PAPER = ./paper.pdf
-LIB = ./src/libtest.a
-#LIB = ./cctools-source/dttools/src/libdttools.a
+LIB = ./cctools-source/dttools/src/libdttools.a
 PROG = ./src/test
 TAR = $(LIB) $(PROG)
 
-all: $(PAPER)
+all: $(TAR) $(PAPER)
 
 $(LIB):
 	git clone git@github.com:nkremerh/cctools -b disk_alloc_fix
@@ -72,10 +83,9 @@ $(LIB):
 	cd ./cctools-source && ./configure && make all
 	$(AR) -rv $(LIB) $(SRC)
 	ranlib $(LIB)
-#	cp $(SRC) ./src/
 
 $(PROG): $(LIB)
-	$(CC) $(CFLAGS) $^ -I $(DTTOOLS) ./src/test.c -o $@
+	$(CC) $(CFLAGS) ./src/test.c -I $(DTTOOLS) $(LDDFLAGS) -o $@
 
 $(DATA): $(PROG)
 	sudo $(PROG) ext4
@@ -94,14 +104,13 @@ $(DATA): $(PROG)
 	mv ./out_empty.dat ./out_empty_ext2.dat
 	mv ./out_raw_empty.dat ./out_raw_empty_ext2.dat
 
-#$(LIB):
-	
-
 $(MID_GRAPHS): $(DATA)
 	perl ./generate_graph_data ./out_raw_ext4.dat ./out_final_ext4
 	perl ./generate_graph_data ./out_raw_ext3.dat ./out_final_ext3
 	perl ./generate_graph_data ./out_raw_ext2.dat ./out_final_ext2
-	gnuplot ./plot_results.gnuplot 
+	gnuplot ./plot_results.gnuplot
+
+$(GRAPHS): $(MID_GRAPHS) 
 
 %.pdf: %.eps
 	epstopdf $< --outfile=$@
