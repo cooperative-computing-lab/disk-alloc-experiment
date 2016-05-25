@@ -1,0 +1,9 @@
+To run all loop device experiments please run: make
+
+To run only the read, write, and file metadata experiments please run: make performance
+
+To run only the creation and deletion overhead experiments please run: make metadata
+
+To clean only the final graphs and paper please run: make lean
+
+To completely clean the experiments please run: make clean

@@ -25,19 +25,19 @@ plot "out_empty_final_ext2.dat" using (log($4)):($5 + $3):($6):(.5):xtic(1) with
 
 set title "Creation"
 set output "create_ext3.eps"
-plot "out_empty_final_ext3.dat" using 0:($5 + $2):($6):(.5):xtic(1) with boxerrorbars
+plot "out_empty_final_ext3.dat" using (log($4)):($5 + $2):($6):(.5):xtic(1) with boxerrorbars
 
 set title "Deletion"
 set output "delete_ext3.eps"
-plot "out_empty_final_ext3.dat" using 0:($5 + $3):($6):(.5):xtic(1) with boxerrorbars
+plot "out_empty_final_ext3.dat" using (log($4)):($5 + $3):($6):(.5):xtic(1) with boxerrorbars
 
 set title "Creation"
 set output "create_ext4.eps"
-plot "out_empty_final_ext4.dat" using 0:($5 + $2):($6):(.5):xtic(1) with boxerrorbars
+plot "out_empty_final_ext4.dat" using (log($4)):($5 + $2):($6):(.5):xtic(1) with boxerrorbars
 
 set title "Deletion"
 set output "delete_ext4.eps"
-plot "out_empty_final_ext4.dat" using 0:($5 + $3):($6):(.5):xtic(1) with boxerrorbars
+plot "out_empty_final_ext4.dat" using (log($4)):($5 + $3):($6):(.5):xtic(1) with boxerrorbars
 
 
 
