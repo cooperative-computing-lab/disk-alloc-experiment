@@ -1,10 +1,10 @@
 CC=gcc
 CFLAGS=-Wall -g
 AR=ar
-DTTOOLS = ./cctools-source/dttools/src
-LDDFLAGS = -L./cctools-source/dttools/src -ldttools -lm
+DTTOOLS = ./cctools_source/dttools/src
+LDDFLAGS = -L./cctools_source/dttools/src -ldttools -lm
 REPO = cooperative-computing-lab/cctools
-COMMIT = cdeec57e41d3e5485987717402cdfb4393dfe8e4 
+COMMIT = 5b6e84351d5667e11d4c58778a7acc6ef965d862 
 #dc3cdf8329daae7c5db9da938ecb025c129bf10f
 
 GRAPHS = \
@@ -108,17 +108,20 @@ OVERHEAD = \
 TEST = ./src/test
 
 PAPER = ./paper.pdf
-LIB = ./cctools-source/dttools/src/libdttools.a
+LIB = ./cctools_source/dttools/src/libdttools.a
 PROG = ./src/benchmark
+CCTOOLS = ./cctools_source
 TAR = $(LIB) $(PROG)
 
 all: $(TAR) $(PAPER)
 
-$(LIB):
+$(CCTOOLS):
 	git clone git://github.com/$(REPO)
 	cd ./cctools && git checkout $(COMMIT)
-	mv ./cctools ./cctools-source
-	cd ./cctools-source && ./configure && make all
+	mv ./cctools ./cctools_source
+	cd ./cctools_source && ./configure && make all
+
+$(LIB): $(CCTOOLS)
 	$(AR) -rv $(LIB) $(SRC)
 	ranlib $(LIB)
 
@@ -185,7 +188,7 @@ performance: $(PERFORMANCE)
 overhead: $(OVERHEAD)
 
 clean celan:
-	rm -rf $(OBJ) $(TAR) $(MID_DATA) $(MID_GRAPHS) $(DATA) $(GRAPHS) ./*.dat ./*.eps ./*.pdf ./paper.aux ./paper.log ./cctools-source ./cctools
+	rm -rf $(OBJ) $(TAR) $(MID_DATA) $(MID_GRAPHS) $(DATA) $(GRAPHS) ./*.dat ./*.eps ./*.pdf ./paper.aux ./paper.log ./cctools_source ./cctools
 
 lean:
 	rm -rf ./*.pdf ./*.eps ./out_*final*.dat

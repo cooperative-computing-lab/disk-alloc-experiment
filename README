@@ -1,3 +1,12 @@
+Loop Device Performance Overhead for Constraining Batch Job Tasks:
+A Technical Report and Experiment in Metascience
+
+If you have any questions, please contact:
+Nathaniel Kremer-Herman
+Department of Computer Science and Engineering
+University of Notre Dame
+nkremerh@nd.edu
+
 This repository contains the source code necessary to test loop device performance 
 compared to the native filesystem's performance. In particular, it captures the
 read/write throughput, file metadata speed, and creation/deletion overhead.

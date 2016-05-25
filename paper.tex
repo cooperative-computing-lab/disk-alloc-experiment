@@ -7,31 +7,22 @@
 \usepackage{floatrow}
 \usepackage{comment}
 
-% correct bad hyphenation here
 \hyphenation{op-tical net-works semi-conduc-tor}
 
 
 \begin{document}
-%
-% paper title
-% can use linebreaks \\ within to get better formatting as desired
 \title{Loop Device Performance Overhead for Constraining Batch Job Tasks:\\A Technical Report and Experiment in Metascience}
 
 
-% author names and affiliations
-% use a multiple column layout for up to three different
-% affiliations
 \author{\IEEEauthorblockN{Nathaniel Kremer-Herman}
 \IEEEauthorblockA{Department of Computer Science and Engineering\\University of Notre Dame\\
 Email: nkremerh@nd.edu}}
 
 
-% make the title area
 \maketitle
 
 
 \begin{abstract}
-%\boldmath
 Providing a resource-constrained sandbox for batch job tasks is a need which has been rising in importance within distributed computing. In many cases, the batch jobs being scheduled are sent to machines which the submitter does not own. Without resource usage guarantees, there is the potential that a task will consume more resources than desired. This may come at the cost of decreasing the availability of the host machine for future work. Or worse, the task may inadvertently take advantage of a flaw which can damage the host machine in an irreparable manner. Presented in this report is a method to keep a batch job task within a secure sandbox constrained by an arbitrary disk size with reasonable performance guarantees as compared to the task executing on the host machine's native filesystem.
 \end{abstract}
 
@@ -90,6 +81,9 @@ We note that the metadata micro-benchmark's performance is notably faster for th
 \subsection{Impact of Failure}
 Loop devices allow for a task to fail more cleanly than if it were not in a strict sandbox. The integrity of the host filesystem is not in as much danger of compromise. In the case of a failure, the loop device may become corrupted and unusable. In this case, the solution is to unmount and remove the loop device. This provides a benefit to the owner of the failed batch job task since the host machine will still be available for future work. Considering an incident without loop devices being used, it is possible that extreme failure can cause problems with the host filesystem precisely because the task is not isolated within its own storage constrained sandbox. All but the most catastrophic failures are contained within a loop device, and it exits cleanly.
 
+\section{Reproducibility Considerations}
+
+
 \section{Conclusion}
 Though resource constraint does not have much support, we present a novel method of constraining the storage usage of a batch job task through the use of loop devices. Loop devices, as opposed to a sentinel process, provide an instantaneous handling of storage exhaustion. This passive method of constraint keeps a task within its requested storage. This in turns prevents the task from using up enough space to affect the availability of the host machine for future work. We have shown that loop devices provide these benefits with a reasonable performance guarantee.
 
@@ -126,8 +120,6 @@ ext4 & \cimage{read_ext4_8GB.pdf} & \cimage{write_ext4_8GB.pdf} & \cimage{meta_e
 \caption{Loop Device Performance with 8GB Allocations}
 \end{figure*}
 
-% Can use something like this to put references on a page
-% by themselves when using endfloat and the captionsoff option.
 \ifCLASSOPTIONcaptionsoff
   \newpage
 \fi

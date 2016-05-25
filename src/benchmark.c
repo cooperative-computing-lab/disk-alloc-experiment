@@ -53,7 +53,12 @@ int read_write_test(int64_t kbyte_size, char *size, char *loc, int nest, int ite
 	double avg_read_time, avg_write_time, read_std_dev, write_std_dev, read_acc, write_acc;
 	char *read_results = NULL;
 	char *write_results = NULL;
-	printf("Performing Read/Write test.\n");
+	if(nest < 0) {
+		printf("Performing Read/Write test of size %s at %s for the native filesystem.\n", size, loc);
+	}
+	else {
+		printf("Performing Read/Write test of size %s at %s at nest depth %d.\n", size, loc, nest);
+	}
 	for(i = 0; i < iterations; i++) {	
 		system(flush);
 		gettimeofday(&write_wall_start, NULL);
@@ -147,7 +152,12 @@ int metadata_test(char *size, char *loc, int nest, int iterations) {
 	struct timeval wall_end;
 	double avg_time, meta_acc, meta_std_dev;
 	char *meta_results;
-	printf("Performing Metadata test.\n");
+	if(nest < 0) {
+		printf("Performing Metadata test of size %s at %s for the native filesystem.\n", size, loc);	
+	}
+	else {
+		printf("Performing Metadata test of size %s at %s at nest depth %d.\n", size, loc, nest);
+	}
 	for(k = 0; k < iterations; k++) {
 		i = 0;
 		system("sync;echo 3 > /proc/sys/vm/drop_caches");
@@ -232,11 +242,10 @@ int disk_alloc_test_empty(char *size, int iterations, char *fs) {
 	int k = 0;
 	int j, result = 0;
 
-	printf("Performing empty loop device allocation speed test.\n");
+	printf("Performing empty loop device allocation speed test of size %s at %s with filesystem %s.\n", size, loc, fs);
 
 	for(j = 0; j < iterations; j++) {
 		system(flush);
-		fprintf(stderr, "loc: %s\tfs: %s\tfit_size: %"PRId64"\n", loc, fs, fit_size);
 		gettimeofday(&wall_start, NULL);
 		result = disk_alloc_create(loc, fs, fit_size);
 		gettimeofday(&wall_end, NULL);
