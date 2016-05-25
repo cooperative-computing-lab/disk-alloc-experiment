@@ -1,3 +1,16 @@
+/*
+ * Copyright (C) 2015- The University of Notre Dame
+ * This software is distributed under the GNU General Public License.
+*/
+
+/*
+ *
+ * This program contains benchmarks for the use of loop devices
+ * as storage constraint. Included are tests for read/write
+ * throughput, file metadata speed, and creation/deletion speed.
+ *
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -14,6 +27,8 @@
 #include "disk_alloc.h"
 #include "stringtools.h"
 
+//Conducts read/write throughput testing based on the provided allocation size, location,
+//nest depth, and the iterations per test.
 int read_write_test(int64_t kbyte_size, char *size, char *loc, int nest, int iterations) {
 
 	int64_t average_read_time = 0;
@@ -62,20 +77,6 @@ int read_write_test(int64_t kbyte_size, char *size, char *loc, int nest, int ite
 		read_results = string_format("%s 0 ? ? ? %d ? %"PRId64" %"PRId64"\n", size, nest, test_size, read_wall_time);
 		write_results = string_format("%s ? 0 ? ? %d ? %"PRId64" %"PRId64"\n", size, nest, test_size, write_wall_time);
 
-		//Acknowledge wild outliers
-		/*
-		if(i > 0 && (read_wall_time >= (read_times[i-1] * 10))) {
-			printf("Found outlier greater than or equal to one order of magnitude of previous test.\n");
-			f = fopen(file3, "a");
-			fprintf(f, read_results);
-			fclose(f);
-		}
-		else if(i > 0 && (write_wall_time >= (write_times[i-1] * 10))) {
-			printf("Found outlier greater than or equal to one order of magnitude of previous test.\n");
-			f = fopen(file3, "a");
-			fprintf(f, write_results);
-			fclose(f);
-		}*/
 		average_read_time += read_wall_time;
 		average_write_time += write_wall_time;
 		read_times[i] = read_wall_time;
@@ -121,34 +122,13 @@ int read_write_test(int64_t kbyte_size, char *size, char *loc, int nest, int ite
 	write_std_dev = write_std_dev / 1000000;
 	avg_read_time = avg_read_time / 1000000;
 	avg_write_time = avg_write_time / 1000000;
-	read_results = string_format("%s 0 ? ? ? %d ? %"PRId64" %f %f\n", size, nest, test_size, avg_read_time, read_std_dev);
-	write_results = string_format("%s ? 0 ? ? %d ? %"PRId64" %f %f\n", size, nest, test_size, avg_write_time, write_std_dev);
-	if(read_results && write_results) {
-		f = fopen(file2, "a");	
-		if(f == NULL) {
-			printf("File %s could not be opened during read/write testing. Printing test results for manual entry into %s.\n%s%s", file, file, read_results, write_results);
-			free(read_results);
-			free(write_results);
-			free(file2);
-			fprintf(stderr, "Read/Write test errno %d: %s\n", errno, strerror(errno));
-			return 1;
-		}
-		fprintf(f, read_results);
-		fprintf(f, write_results);
-		fclose(f);
-		free(read_results);
-		free(write_results);
-		}
-	else {
-		printf("Read/Write results could not be calculated. Current test aborted.\n");
-		free(file2);
-		return 1;
-	}
 	printf("Read/Write test complete.\nAverage Read Time: %f\nAverage Write time: %f\n", avg_read_time, avg_write_time);
 	free(file);
 	return 0;
 }
 
+//Conducts file metadata testing based on provided allocation size,
+//location, nest depth, and number of test iterations.
 int metadata_test(char *size, char *loc, int nest, int iterations) {
 
 	int k, i;
@@ -192,15 +172,6 @@ int metadata_test(char *size, char *loc, int nest, int iterations) {
 
 		meta_results = string_format("%s ? ? 0 ? %d 10000 ? %"PRId64"\n", size, nest, wall_time);
 
-		//Acknowledge wild outliers
-		/*
-		if(k > 0 && (wall_time >= (meta_times[k-1] * 10))) {
-			printf("Found outlier greater than or equal to one order of magnitude of previous test.\n");
-			f = fopen(file3, "a");
-			fprintf(f, meta_results);
-			fclose(f);
-		}
-		*/
 		average_time += wall_time;
 		meta_times[k] = wall_time;
 
@@ -234,36 +205,19 @@ int metadata_test(char *size, char *loc, int nest, int iterations) {
 	meta_std_dev = sqrt(meta_acc);
 	meta_std_dev = meta_std_dev / 1000000;
 	avg_time = avg_time / 1000000;
-	meta_results = string_format("%s ? ? 0 ? %d 10000 ? %f %f\n", size, nest, avg_time, meta_std_dev);
-	if(meta_results) {
-		f = fopen(file2, "a");
-		if(f == NULL) {
-			printf("File %s could not be opened during metadata testing. Printing test results for manual entry into %s.\n%s", file, file, meta_results);
-			free(meta_results);
-			free(file2);
-			fprintf(stderr, "Metadata test errno %d: %s\n", errno, strerror(errno));
-			return 1;
-		}
-		fprintf(f, meta_results);
-		fclose(f);
-		free(meta_results);
-	}
-	else {
-		printf("Metadata results could not be calculated. Current test aborted.\n");
-		free(file2);
-		return 1;
-	}
 	printf("Metadata test complete.\nAverage Metadata time: %f\n", avg_time);
 	free(file);
 	return 0;
 }
 
+//Conducts creation/deletion testing based on provided allocation 
+//size, number of test iterations, and filesystem to mount.
 int disk_alloc_test_empty(char *size, int iterations, char *fs) {
 
 	int64_t times[iterations];
-	struct timeval wall_start;
-	struct timeval wall_end;
-	int64_t wall_time;
+	struct timeval wall_start, wall_start_2;
+	struct timeval wall_end, wall_end_2;
+	int64_t wall_time, wall_time_2;
 	char *flush = "sync";
 	char cwd[FILENAME_MAX];
 	getcwd(cwd, sizeof(cwd));
@@ -282,6 +236,7 @@ int disk_alloc_test_empty(char *size, int iterations, char *fs) {
 
 	for(j = 0; j < iterations; j++) {
 		system(flush);
+		fprintf(stderr, "loc: %s\tfs: %s\tfit_size: %"PRId64"\n", loc, fs, fit_size);
 		gettimeofday(&wall_start, NULL);
 		result = disk_alloc_create(loc, fs, fit_size);
 		gettimeofday(&wall_end, NULL);
@@ -289,7 +244,7 @@ int disk_alloc_test_empty(char *size, int iterations, char *fs) {
 			return 1;
 		}
 		wall_time = ((1000000 * wall_end.tv_sec) + wall_end.tv_usec) - ((1000000 * wall_start.tv_sec) + wall_start.tv_usec);
-		results = string_format("%s ? ? ? 0 %d ? %"PRId64" %"PRId64"\n", size, 0, fit_size, wall_time);
+		results = string_format("%s 0 ? %"PRId64" %"PRId64"\n", size, fit_size, wall_time);
 		times[k] = wall_time;
 		if(results) {
 			f = fopen(file, "a");
@@ -309,7 +264,31 @@ int disk_alloc_test_empty(char *size, int iterations, char *fs) {
 			free(file);
 			return 1;
 		}
+		gettimeofday(&wall_start_2, NULL);
 		disk_alloc_delete(loc);
+		system(flush);
+		gettimeofday(&wall_end_2, NULL);
+		wall_time_2 = ((1000000 * wall_end_2.tv_sec) + wall_end_2.tv_usec) - ((1000000 * wall_start_2.tv_sec) + wall_start_2.tv_usec);
+		results = string_format("%s ? 0 %"PRId64" %"PRId64"\n", size, fit_size, wall_time_2);
+		times[k] = wall_time;
+		if(results) {
+			f = fopen(file, "a");
+			if(f == NULL) {
+				printf("File %s could not be opened during empty lood device testing. Printing test results for manual entry into %s.\n%s", file, file, results);
+				free(results);
+				free(file);
+				fprintf(stderr, "Empty loop device test errno %d: %s\n", errno, strerror(errno));
+				return 1;
+			}
+			fprintf(f, results);
+			fclose(f);
+			free(results);
+		}
+		else {
+			printf("Empty loop device results could not be calculated. Current test aborted.\n");
+			free(file);
+			return 1;
+		}
 		k++;
 	}
 	
@@ -317,6 +296,8 @@ int disk_alloc_test_empty(char *size, int iterations, char *fs) {
 	return 0;
 }
 
+//Handles read/write and metadata testing based on provided allocation size
+//maximum nest depth, number of test iterations, and filesystem to mount.
 int disk_alloc_test(char *size, int max_nest, int iterations, char *fs) {
 
 	char *loc = "/tmp/disk_test";
@@ -352,31 +333,8 @@ int disk_alloc_test(char *size, int max_nest, int iterations, char *fs) {
 	return 0;
 }
 
-int native_test_empty(int iterations) {
-
-	char *loc = "/tmp/native_test";
-	struct stat buf;
-	int k = 0;
-	while(k < iterations) {
-		struct timeval wall_start;
-		gettimeofday(&wall_start, NULL);
-		mkdir(loc, 0777);
-		stat(loc, &buf);
-		rmdir(loc);
-		struct timeval wall_end;
-		gettimeofday(&wall_end, NULL);
-		int64_t wall_time =((1000000 * wall_end.tv_sec) + wall_end.tv_usec) - ((1000000 * wall_start.tv_sec) + wall_start.tv_usec);
-		off_t stat_size = buf.st_size;
-		printf("wall: %"PRId64"\nsize: %"PRId64"\n", wall_time, (int64_t) stat_size);
-		char *file = "./out.dat";
-		FILE *f = fopen(file, "a");
-		fprintf(f, "native ? ? ? 0 -1 ? ? %"PRId64"\n", wall_time);
-		fclose(f);
-		k++;
-	}
-	return 0;
-}
-
+//Handles testing for the native filesystem based
+//on total size and number of test iterations.
 int native_test(char *size, int iterations) {
 
 	char *loc = "/tmp/native_test";
@@ -388,35 +346,45 @@ int native_test(char *size, int iterations) {
 	return 0;
 }
 
+//Handles testing for loop devices allocations
+//and native filesystem testing.
+//Uses provided mode to determine whether to run
+//performance testing of create/delete overhead
+//testing.
 int main(int argc, char *argv[]) {
 
-	if(argc < 2) { printf("Must provide filesystem argument"); exit(1); }
-	//disk_alloc_test_empty("2GB", argv[1]);
-	//disk_alloc_test_empty("4GB", argv[1]);
-	//disk_alloc_test_empty("8GB", argv[1]);
-	disk_alloc_test_empty("1MB", 20, argv[1]);
-	disk_alloc_test_empty("2MB", 20, argv[1]);
-	disk_alloc_test_empty("4MB", 20, argv[1]);
-	disk_alloc_test_empty("8MB", 20, argv[1]);
-	disk_alloc_test_empty("16MB", 20, argv[1]);
-	disk_alloc_test_empty("32MB", 20, argv[1]);
-	disk_alloc_test_empty("64MB", 20, argv[1]);
-	disk_alloc_test_empty("128MB", 20, argv[1]);
-	disk_alloc_test_empty("256MB", 20, argv[1]);
-	disk_alloc_test_empty("512MB", 20, argv[1]);
-	disk_alloc_test_empty("1GB", 20, argv[1]);
-	disk_alloc_test_empty("2GB", 20, argv[1]);
-	disk_alloc_test_empty("4GB", 20, argv[1]);
-	disk_alloc_test_empty("8GB", 20, argv[1]);
-	disk_alloc_test_empty("16GB", 20, argv[1]);
-	//native_test_empty(20);
-	/*native_test("2GB", 20);
-	native_test("4GB", 20);
-	native_test("8GB", 20);
-	disk_alloc_test("2GB", 20, 20, argv[1]);
-	disk_alloc_test("4GB", 20, 20, argv[1]);
-	disk_alloc_test("8GB", 20, 20, argv[1]);
-	*///disk_alloc_test("2GB", 2, 2, argv[1]);
+	if(argc < 3) { printf("Must provide filesystem and mode.\n"); exit(1); }
+	
+	int mode = atoi(argv[2]);
+
+	if(mode == 0) {
+		disk_alloc_test("2GB", 20, 20, argv[1]);
+		disk_alloc_test("4GB", 20, 20, argv[1]);
+		disk_alloc_test("8GB", 20, 20, argv[1]);
+		native_test("2GB", 20);
+		native_test("4GB", 20);
+		native_test("8GB", 20);
+	}
+	else if(mode == 1) {
+		disk_alloc_test_empty("1MB", 20, argv[1]);
+		disk_alloc_test_empty("2MB", 20, argv[1]);
+		disk_alloc_test_empty("4MB", 20, argv[1]);
+		disk_alloc_test_empty("8MB", 20, argv[1]);
+		disk_alloc_test_empty("16MB", 20, argv[1]);
+		disk_alloc_test_empty("32MB", 20, argv[1]);
+		disk_alloc_test_empty("64MB", 20, argv[1]);
+		disk_alloc_test_empty("128MB", 20, argv[1]);
+		disk_alloc_test_empty("256MB", 20, argv[1]);
+		disk_alloc_test_empty("512MB", 20, argv[1]);
+		disk_alloc_test_empty("1GB", 20, argv[1]);
+		disk_alloc_test_empty("2GB", 20, argv[1]);
+		disk_alloc_test_empty("4GB", 20, argv[1]);
+		disk_alloc_test_empty("8GB", 20, argv[1]);
+	}
+	else {
+		printf("Improper mode specified. Choices are 0 (performance testing) or 1 (metadata testing).\n");
+		exit(1);
+	}
 
 	printf("All tests successfully completed.\n");
 	return 0;

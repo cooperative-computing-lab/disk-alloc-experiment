@@ -65,7 +65,7 @@ PERF_MID_GRAPHS = \
 	./write_ext4_4GB.eps \
 	./write_ext4_8GB.eps
 
-META_MID_GRAPHS = \
+OVER_MID_GRAPHS = \
 	./create_ext2.eps \
 	./create_ext3.eps \
 	./create_ext4.eps \
@@ -75,32 +75,32 @@ META_MID_GRAPHS = \
 
 MID_GRAPHS = \
 	$(PERF_MID_GRAPHS) \
-	$(META_MID_GRAPHS)
+	$(OVER_MID_GRAPHS)
 
 PERF_MID_DATA = \
 	./out_final_ext2.dat \
 	./out_final_ext3.dat \
 	./out_final_ext4.dat
 
-META_MID_DATA = \
+OVER_MID_DATA = \
 	./out_empty_final_ext2.dat \
 	./out_empty_final_ext3.dat \
 	./out_empty_final_ext4.dat
 
 MID_DATA = \
 	$(PERF_MID_DATA) \
-	$(META_MID_DATA)
+	$(OVER_MID_DATA)
 
 DATA = \
 	$(PERFORMANCE) \
-	$(METADATA)
+	$(OVERHEAD)
 
 PERFORMANCE = \
 	./out_raw_ext2.dat \
 	./out_raw_ext3.dat \
 	./out_raw_ext4.dat
 
-METADATA = \
+OVERHEAD = \
 	./out_raw_empty_ext2.dat \
 	./out_raw_empty_ext3.dat \
 	./out_raw_empty_ext4.dat
@@ -109,7 +109,7 @@ TEST = ./src/test
 
 PAPER = ./paper.pdf
 LIB = ./cctools-source/dttools/src/libdttools.a
-PROG = ./src/test
+PROG = ./src/benchmark
 TAR = $(LIB) $(PROG)
 
 all: $(TAR) $(PAPER)
@@ -123,7 +123,7 @@ $(LIB):
 	ranlib $(LIB)
 
 $(PROG): $(LIB)
-	$(CC) $(CFLAGS) ./src/test.c -I $(DTTOOLS) $(LDDFLAGS) -o $@
+	$(CC) $(CFLAGS) ./src/benchmark.c -I $(DTTOOLS) $(LDDFLAGS) -o $@
 
 out_raw_ext4.dat: $(PROG)
 	$(PROG) ext4 0
@@ -150,11 +150,11 @@ out_raw_empty_ext2.dat: $(PROG)
 	mv ./out_raw_empty.dat ./out_raw_empty_ext2.dat
 
 $(PERF_MID_DATA): $(PERFORMANCE)
-	perl ./generate_graph_data ./out_raw_ext4.dat ./out_final_ext4
-	perl ./generate_graph_data ./out_raw_ext3.dat ./out_final_ext3
-	perl ./generate_graph_data ./out_raw_ext2.dat ./out_final_ext2
+	perl ./generate_graph_data.pl ./out_raw_ext4.dat ./out_final_ext4
+	perl ./generate_graph_data.pl ./out_raw_ext3.dat ./out_final_ext3
+	perl ./generate_graph_data.pl ./out_raw_ext2.dat ./out_final_ext2
 
-$(META_MID_DATA): $(METADATA)
+$(OVER_MID_DATA): $(OVERHEAD)
 	perl ./generate_alloc_graph_data.pl ./out_raw_empty_ext4.dat ./out_empty_final_ext4
 	perl ./generate_alloc_graph_data.pl ./out_raw_empty_ext3.dat ./out_empty_final_ext3
 	perl ./generate_alloc_graph_data.pl ./out_raw_empty_ext2.dat ./out_empty_final_ext2
@@ -176,13 +176,13 @@ mid_graphs: $(MID_GRAPHS)
 
 build: $(LIB) $(PROG)
 
-test: $(DATA)
+benchmark: $(DATA)
 
 source: $(TEST)
 
 performance: $(PERFORMANCE)
 
-metadata: $(METADATA)
+overhead: $(OVERHEAD)
 
 clean celan:
 	rm -rf $(OBJ) $(TAR) $(MID_DATA) $(MID_GRAPHS) $(DATA) $(GRAPHS) ./*.dat ./*.eps ./*.pdf ./paper.aux ./paper.log ./cctools-source ./cctools

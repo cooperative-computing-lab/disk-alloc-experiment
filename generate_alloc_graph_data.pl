@@ -1,8 +1,13 @@
 #!/usr/bin/perl
 #
-#Copyright (C) 2013- The University of Notre Dame
+#Copyright (C) 2016- The University of Notre Dame
 #This software is distributed under the GNU General Public License.
-#See the file COPYING for details.
+#This program analyzes the raw data from the create/delete overhead
+#tests and provides the median, median absolute deviation, mean, and
+#standard deviation for that data. This finalized data is used for graphing.
+#This program requires the user to specify the raw data file to be analyzed 
+#and the pattern for the output file. This output pattern will have '.dat' 
+#appended to it.
 #
 
 use strict; 
