@@ -1,8 +1,36 @@
+This repository contains the source code necessary to test loop device performance 
+compared to the native filesystem's performance. In particular, it captures the
+read/write throughput, file metadata speed, and creation/deletion overhead.
+
+Contained is also a technical paper which analyzes the results obtained on the 
+original test platform as well as the mechanics of implementing loop devices for
+batch system task storage constraint.
+
+This program requires superuser access for a few of its operations. If possible, 
+please prepend 'sudo' to your call to the Makefile.
+
+Here is a list of required programs to run the Makefile:
+git
+ar
+perl
+gnuplot
+epstopdf
+pdflatex
+
+Here is the kernel version of the test platform and the filesystems used in the test:
+Linux 2.6.32-504.16.2.el6.x86_64
+ext2
+ext3
+ext4
+
+You are more than welcome to add more filesystems to test in the benchmark.c program 
+found in the ./src/ directory. Please let us know what you find!
+
 To run all loop device experiments please run: make
 
 To run only the read, write, and file metadata experiments please run: make performance
 
-To run only the creation and deletion overhead experiments please run: make metadata
+To run only the creation and deletion overhead experiments please run: make overhead
 
 To clean only the final graphs and paper please run: make lean
 
