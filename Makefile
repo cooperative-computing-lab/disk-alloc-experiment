@@ -180,8 +180,10 @@ $(PREV_OVER_MID_DATA): $(PREV_OVERHEAD)
 	perl ./generate_alloc_graph_data.pl ./previous_results/out_raw_empty_ext3.dat ./previous_results/out_empty_final_ext3
 	perl ./generate_alloc_graph_data.pl ./previous_results/out_raw_empty_ext2.dat ./previous_results/out_empty_final_ext2
 
-$(PREV_MID_GRAPHS): $(PREV_MID_DATA) 
-	cd ./previous_results && gnuplot ./plot_results.gnuplot
+./out.txt: $(PREV_MID_DATA) 
+	cd ./previous_results && gnuplot ./plot_results.gnuplot > ./out.txt
+
+$(PREV_MID_GRAPHS): ./out.txt
 
 %.pdf: %.eps
 	epstopdf $< --outfile=$@
