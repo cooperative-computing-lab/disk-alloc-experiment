@@ -32,6 +32,8 @@ ext2
 ext3
 ext4
 
+You can find the results obtained during our testing in the ./previous_results/ directory.
+
 You are more than welcome to add more filesystems to test in the benchmark.c program 
 found in the ./src/ directory. Please let us know what you find!
 

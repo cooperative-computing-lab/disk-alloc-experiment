@@ -59,12 +59,14 @@ In Work Queue, a batch job task first instantiates a loop device on the host mac
 A task's resource requirements are specified within a makeflow. These constraints include the number of cores the task will utilize, the amount of memory it requires, and the amount of disk space it will consume. The disk allocation library is passed the disk space requirements from the makeflow via Work Queue. This disk space requirement is used as the size of the loop device.
 
 \section{Evaluation}
-In order to properly capture the relevant performance characteristics of loop devices as compared to the native filesystem, the evaluation of the library consists of standard micro-benchmarks which test throughput performance.
+In order to properly capture the relevant performance characteristics of loop devices as compared to the native filesystem, the evaluation of the library consists of standard micro-benchmarks which test throughput performance as well as overhead of loop device instantiation and deletion.
 
 \subsection{Metrics}
 We measured the performance of loop device allocations compared to a native filesystem with three micro-benchmarks: read, write, and file metadata throughput. Our test platform has the following specifications: 3GB RAM, 2 x Intel Core 2 Duo processors, 250GB SATA drive (16 heads, 7,200 RPM, 16,383 cylinders, 63 sectors/track, queue depth 32, max I/O data transfer rate 300 MB/s, max sustained data transfer rate 125 MB/s, internal data transfer rate 1,695 Mb/s). We measured sequential read and sequential write throughput of a file 95\% of its allocation size. Metadata throughput was measured by timing a loop device's creation of 10,000 blank files, retrieving file status on each file, then deleting each file. We tested these micro-benchmarks across three filesystems: ext2, ext3, and ext4 which are commonly available. 
 
-Each micro-benchmark test ran for twenty iterations then created a nested loop device within the current device. This process was completed twenty times resulting in a loop device nested within twenty other loop devices. This nesting shows a reduction in device performance the deeper the device is nested. Though nesting a loop device within another is feasible in terms of performance, it is not the expected behavior of a workflow. Regardless, we demonstrate that an entire workflow can run within a storage container and still perform reasonably. The aim of these micro-benchmarks was to demonstrate that a loop device does not experience a steep performance decline in order to provide a resource guarantee for a workflow task. We have provided the first ten iterations of the test as they are most pertinent.
+Each micro-benchmark test ran for twenty iterations then created a nested loop device within the current device. This process was completed twenty times resulting in a loop device nested within twenty other loop devices. This nesting shows a reduction in device performance the deeper the device is nested. Though nesting a loop device within another is feasible in terms of performance, it is not the expected behavior of a workflow. Regardless, we demonstrate that an entire workflow can run within a storage container and still perform reasonably. The aim of these micro-benchmarks was to demonstrate that a loop device does not experience a steep performance decline in order to provide a resource guarantee for a workflow task. We have provided the first ten nest depths of the test as they are most pertinent.
+
+We also measured the overhead associated with the creation and deletion of loop devices. Much like the throughput performance tests, each test ran for twenty iterations. However, we did not take into account nesting for these two micro-benchmarks. We measured the time to create a loop device sandbox starting at a size of 1MB and increasing in logarithmic scale to 8GB. We also timed how long it took to delete the loop device sandbox.
 
 \subsection{Performance}
 The results presented in Figures \ref{fig:2gb}, \ref{fig:4gb}, and \ref{fig:8gb} display the median value across each nest depth with the respective median absolute deviation. This format was chosen in order to present the most accurate representation of loop device performance. The performance of a loop device mounted with the any of the ext family filesystems performs comparably in many cases with the native filesystem. The native filesystem of our test platform is ext4. By using non-trivial sizes for the test allocations (in the order of GBs), our micro-benchmarks simulate sustained I/O expected of a batch job task completing a realistic work load. This is opposed to burst I/O which would be seen in tasks smaller than 1GB. 
@@ -72,7 +74,7 @@ The results presented in Figures \ref{fig:2gb}, \ref{fig:4gb}, and \ref{fig:8gb}
 Since the majority of workflows execute within a nest depth of zero, the most pertinent results are located within the first few nest depths. The rare case of a nested loop device task would occur if a batch job task executed another workflow locally. For added perspective, we have provided the performance results down to a nest level of ten. This would be indicative of the performance of a task recursively executing ten separate workflows locally. 
 We examine the MB/s throughput of the device in the read and write micro-benchmarks at each nest depth (from the native filesystem to a loop device nest depth of ten).
 
- We note an equivalent performance to the native filesystem with a nest depth of zero (a single loop device) in the read micro-benchmark. As nest depth increases, there is a linear decrease in read speed. We demonstrate that the resource constraint provided by loop devices does not come at the cost of performance for most cases. Should a user execute a workflow which would make use of nested loop devices, they must consider the nest depth at which they see diminishing returns. Reasonable, though not comparable, performance can be expected within the first four nest levels of loop devices after which read performance begins to become more lackluster compared to the native filesystem.
+We note an equivalent performance to the native filesystem with a nest depth of zero (a single loop device) in the read micro-benchmark. As nest depth increases, there is a linear decrease in read speed. We demonstrate that the resource constraint provided by loop devices does not come at the cost of performance for most cases. Should a user execute a workflow which would make use of nested loop devices, they must consider the nest depth at which they see diminishing returns. Reasonable, though not comparable, performance can be expected within the first four nest levels of loop devices after which read performance begins to become more lackluster compared to the native filesystem.
 
 Write performance maintains comparable performance to the native filesystem at a deeper nest level than read performance. However, there is a sharper degradation in performance once a nest depth of four is reached. Similar to the read performance, the user would have to consider the added cost of resource guarantees and constraint if their workflow will execute at higher nest depths. 
 
@@ -84,21 +86,31 @@ Loop devices allow for a task to fail more cleanly than if it were not in a stri
 \section{Reproducibility Considerations}
 Although this experiment is primarily intended to demonstrate the viability of loop devices for storage constraint, we also make special considerations for the reproducibility of the experiment. In particular, we have already documented a comprehensive specification of the disk used in our test platform. To achieve greater reproducibility however, we must create a near-exact replica of the test platform. This can be done with a virtual machine which will be able to simulate not only the software of the test machine but also the hardware and kernel. The next step toward reproducibility of this work would be for us to host an image of our test platform freely available.
 
-Availability of the experiment is an important consideration for reproducibility. We have provided the source code, which is freely available on GitHub at {\tt{https://github.com/cooperative-computing-lab/disk-alloc-experiment}}. Within this git repository we have included a convenient Makefile which makes running the experiment quite simple. This Makefile downloads all the dependent code for the experiment except some software listed in the {\tt{README}} located in the repository as well as runs the specified tests, generates graphs from the test data, and compiles this paper. We chose to provide this depth of content because reproducibility and availability are high priorities with respect to this technical report.
+Availability of the experiment is an important consideration for reproducibility. We have provided the source code, which is freely available on GitHub at {\tt{https://github.com/cooperative-computing-lab/disk-alloc-experiment}}. Within this git repository we have included the data collected for this technical report and a convenient Makefile which makes running the experiment quite simple. This Makefile downloads all the dependent code for the experiment except some software listed in the {\tt{README}} located in the repository as well as runs the specified tests, generates graphs from the test data, and compiles this paper. We chose to provide this depth of content because reproducibility and availability are high priorities with respect to this technical report.
 
 Another consideration for reproducibility is the anticipated runtime of the tests. In particular, the performance tests (read, write, and file metadata tests) took approximately two weeks to complete on the test platform. This was due to the twenty iterations taken on each test which ran to a nest depth of twenty. This was a heavy I/O load for the test platform. However, the overhead tests (creation and deletion tests) took much less time to run at approximately two hours. The vast difference between the two comes from the lack of nest performance taken into account by the overhead tests.
 
 \section{Conclusion}
-Though resource constraint does not have much support, we present a novel method of constraining the storage usage of a batch job task through the use of loop devices. Loop devices, as opposed to a sentinel process, provide an instantaneous handling of storage exhaustion. This passive method of constraint keeps a task within its requested storage. This in turns prevents the task from using up enough space to affect the availability of the host machine for future work. We have shown that loop devices provide these benefits with a reasonable performance guarantee.
+Though resource constraint does not have much support, we present a novel method of constraining the storage usage of a batch job task through the use of loop devices. Loop devices, as opposed to a sentinel process, provide an instantaneous handling of storage exhaustion. This passive method of constraint keeps a task within its requested storage while also guaranteeing resources to it. This in turns prevents the task from using up enough space to affect the availability of the host machine for future work. We have shown that loop devices provide these benefits with a reasonable performance guarantee.
 
-\newpage
 \newcommand{\cimage}[1]{$\vcenter{\hbox{\includegraphics[width=0.3\textwidth]{#1}}}$}
 
 \begin{figure*}[t]
+\begin{tabular}{ccc}
+ext2 & \cimage{./previous_results/create_ext2.pdf} & \cimage{./previous_results/delete_ext2.pdf}\\
+ext3 & \cimage{./previous_results/create_ext3.pdf} & \cimage{./previous_results/delete_ext3.pdf}\\
+ext4 & \cimage{./previous_results/create_ext4.pdf} & \cimage{./previous_results/delete_ext4.pdf}\\
+\end{tabular}
+\label{fig:create}
+\caption{Loop Device Creation/Deletion Overhead}
+\end{figure*}
+
+\newpage
+\begin{figure*}[t]
 \begin{tabular}{cccc}
-ext2 & \cimage{read_ext2_2GB.pdf} & \cimage{write_ext2_2GB.pdf} & \cimage{meta_ext2_2GB.pdf}\\
-ext3 & \cimage{read_ext3_2GB.pdf} & \cimage{write_ext3_2GB.pdf} & \cimage{meta_ext3_2GB.pdf}\\
-ext4 & \cimage{read_ext4_2GB.pdf} & \cimage{write_ext4_2GB.pdf} & \cimage{meta_ext4_2GB.pdf}\\
+ext2 & \cimage{./previous_results/read_ext2_2GB.pdf} & \cimage{./previous_results/write_ext2_2GB.pdf} & \cimage{./previous_results/meta_ext2_2GB.pdf}\\
+ext3 & \cimage{./previous_results/read_ext3_2GB.pdf} & \cimage{./previous_results/write_ext3_2GB.pdf} & \cimage{./previous_results/meta_ext3_2GB.pdf}\\
+ext4 & \cimage{./previous_results/read_ext4_2GB.pdf} & \cimage{./previous_results/write_ext4_2GB.pdf} & \cimage{./previous_results/meta_ext4_2GB.pdf}\\
 \end{tabular}
 \label{fig:2gb}
 \caption{Loop Device Performance with 2GB Allocations}
@@ -106,9 +118,9 @@ ext4 & \cimage{read_ext4_2GB.pdf} & \cimage{write_ext4_2GB.pdf} & \cimage{meta_e
 
 \begin{figure*}[t]
 \begin{tabular}{cccc}
-ext2 & \cimage{read_ext2_4GB.pdf} & \cimage{write_ext2_4GB.pdf} & \cimage{meta_ext2_4GB.pdf}\\
-ext3 & \cimage{read_ext3_4GB.pdf} & \cimage{write_ext3_4GB.pdf} & \cimage{meta_ext3_4GB.pdf}\\
-ext4 & \cimage{read_ext4_4GB.pdf} & \cimage{write_ext4_4GB.pdf} & \cimage{meta_ext4_4GB.pdf}\\
+ext2 & \cimage{./previous_results/read_ext2_4GB.pdf} & \cimage{./previous_results/write_ext2_4GB.pdf} & \cimage{./previous_results/meta_ext2_4GB.pdf}\\
+ext3 & \cimage{./previous_results/read_ext3_4GB.pdf} & \cimage{./previous_results/write_ext3_4GB.pdf} & \cimage{./previous_results/meta_ext3_4GB.pdf}\\
+ext4 & \cimage{./previous_results/read_ext4_4GB.pdf} & \cimage{./previous_results/write_ext4_4GB.pdf} & \cimage{./previous_results/meta_ext4_4GB.pdf}\\
 \end{tabular}
 \label{fig:4gb}
 \caption{Loop Device Performance with 4GB Allocations}
@@ -116,9 +128,9 @@ ext4 & \cimage{read_ext4_4GB.pdf} & \cimage{write_ext4_4GB.pdf} & \cimage{meta_e
 
 \begin{figure*}[t]
 \begin{tabular}{cccc}
-ext2 & \cimage{read_ext2_8GB.pdf} & \cimage{write_ext2_8GB.pdf} & \cimage{meta_ext2_8GB.pdf}\\
-ext3 & \cimage{read_ext3_8GB.pdf} & \cimage{write_ext3_8GB.pdf} & \cimage{meta_ext3_8GB.pdf}\\
-ext4 & \cimage{read_ext4_8GB.pdf} & \cimage{write_ext4_8GB.pdf} & \cimage{meta_ext4_8GB.pdf}\\
+ext2 & \cimage{./previous_results/read_ext2_8GB.pdf} & \cimage{./previous_results/write_ext2_8GB.pdf} & \cimage{./previous_results/meta_ext2_8GB.pdf}\\
+ext3 & \cimage{./previous_results/read_ext3_8GB.pdf} & \cimage{./previous_results/write_ext3_8GB.pdf} & \cimage{./previous_results/meta_ext3_8GB.pdf}\\
+ext4 & \cimage{./previous_results/read_ext4_8GB.pdf} & \cimage{./previous_results/write_ext4_8GB.pdf} & \cimage{./previous_results/meta_ext4_8GB.pdf}\\
 \end{tabular}
 \label{fig:8gb}
 \caption{Loop Device Performance with 8GB Allocations}

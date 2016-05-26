@@ -7,85 +7,42 @@ REPO = cooperative-computing-lab/cctools
 COMMIT = 5b6e84351d5667e11d4c58778a7acc6ef965d862 
 #dc3cdf8329daae7c5db9da938ecb025c129bf10f
 
-GRAPHS = \
-	./meta_ext2_2GB.pdf \
-	./meta_ext2_4GB.pdf \
-	./meta_ext2_8GB.pdf \
-	./meta_ext3_2GB.pdf \
-	./meta_ext3_4GB.pdf \
-	./meta_ext3_8GB.pdf \
-	./meta_ext4_2GB.pdf \
-	./meta_ext4_4GB.pdf \
-	./meta_ext4_8GB.pdf \
-	./read_ext2_2GB.pdf \
-	./read_ext2_4GB.pdf \
-	./read_ext2_8GB.pdf \
-	./read_ext3_2GB.pdf \
-	./read_ext3_4GB.pdf \
-	./read_ext3_8GB.pdf \
-	./read_ext4_2GB.pdf \
-	./read_ext4_4GB.pdf \
-	./read_ext4_8GB.pdf \
-	./write_ext2_2GB.pdf \
-	./write_ext2_4GB.pdf \
-	./write_ext2_8GB.pdf \
-	./write_ext3_2GB.pdf \
-	./write_ext3_4GB.pdf \
-	./write_ext3_8GB.pdf \
-	./write_ext4_2GB.pdf \
-	./write_ext4_4GB.pdf \
-	./write_ext4_8GB.pdf
+GRAPHS = ./meta_ext2_2GB.pdf ./meta_ext2_4GB.pdf ./meta_ext2_8GB.pdf \
+	./meta_ext3_2GB.pdf ./meta_ext3_4GB.pdf ./meta_ext3_8GB.pdf \
+	./meta_ext4_2GB.pdf ./meta_ext4_4GB.pdf ./meta_ext4_8GB.pdf \
+	./read_ext2_2GB.pdf ./read_ext2_4GB.pdf ./read_ext2_8GB.pdf \
+	./read_ext3_2GB.pdf ./read_ext3_4GB.pdf ./read_ext3_8GB.pdf \
+	./read_ext4_2GB.pdf ./read_ext4_4GB.pdf ./read_ext4_8GB.pdf \
+	./write_ext2_2GB.pdf ./write_ext2_4GB.pdf ./write_ext2_8GB.pdf \
+	./write_ext3_2GB.pdf ./write_ext3_4GB.pdf ./write_ext3_8GB.pdf \
+	./write_ext4_2GB.pdf ./write_ext4_4GB.pdf ./write_ext4_8GB.pdf \
+	./create_ext2.pdf ./create_ext3.pdf ./create_ext4.pdf \
+	./delete_ext2.pdf ./delete_ext3.pdf ./delete_ext4.pdf
 
-PERF_MID_GRAPHS = \
-	./meta_ext2_2GB.eps \
-	./meta_ext2_4GB.eps \
-	./meta_ext2_8GB.eps \
-	./meta_ext3_2GB.eps \
-	./meta_ext3_4GB.eps \
-	./meta_ext3_8GB.eps \
-	./meta_ext4_2GB.eps \
-	./meta_ext4_4GB.eps \
-	./meta_ext4_8GB.eps \
-	./read_ext2_2GB.eps \
-	./read_ext2_4GB.eps \
-	./read_ext2_8GB.eps \
-	./read_ext3_2GB.eps \
-	./read_ext3_4GB.eps \
-	./read_ext3_8GB.eps \
-	./read_ext4_2GB.eps \
-	./read_ext4_4GB.eps \
-	./read_ext4_8GB.eps \
-	./write_ext2_2GB.eps \
-	./write_ext2_4GB.eps \
-	./write_ext2_8GB.eps \
-	./write_ext3_2GB.eps \
-	./write_ext3_4GB.eps \
-	./write_ext3_8GB.eps \
-	./write_ext4_2GB.eps \
-	./write_ext4_4GB.eps \
-	./write_ext4_8GB.eps
+PERF_MID_GRAPHS = ./meta_ext2_2GB.eps ./meta_ext2_4GB.eps ./meta_ext2_8GB.eps \
+	./meta_ext3_2GB.eps ./meta_ext3_4GB.eps ./meta_ext3_8GB.eps \
+	./meta_ext4_2GB.eps ./meta_ext4_4GB.eps ./meta_ext4_8GB.eps \
+	./read_ext2_2GB.eps ./read_ext2_4GB.eps ./read_ext2_8GB.eps \
+	./read_ext3_2GB.eps ./read_ext3_4GB.eps ./read_ext3_8GB.eps \
+	./read_ext4_2GB.eps ./read_ext4_4GB.eps ./read_ext4_8GB.eps \
+	./write_ext2_2GB.eps ./write_ext2_4GB.eps ./write_ext2_8GB.eps \
+	./write_ext3_2GB.eps ./write_ext3_4GB.eps ./write_ext3_8GB.eps \
+	./write_ext4_2GB.eps ./write_ext4_4GB.eps ./write_ext4_8GB.eps
 
-OVER_MID_GRAPHS = \
-	./create_ext2.eps \
-	./create_ext3.eps \
-	./create_ext4.eps \
-	./delete_ext2.eps \
-	./delete_ext3.eps \
+OVER_MID_GRAPHS = ./create_ext2.eps \
+	./create_ext3.eps ./create_ext4.eps \
+	./delete_ext2.eps ./delete_ext3.eps \
 	./delete_ext4.eps
 
 MID_GRAPHS = \
 	$(PERF_MID_GRAPHS) \
 	$(OVER_MID_GRAPHS)
 
-PERF_MID_DATA = \
-	./out_final_ext2.dat \
-	./out_final_ext3.dat \
-	./out_final_ext4.dat
+PERF_MID_DATA = ./out_final_ext2.dat \
+	./out_final_ext3.dat ./out_final_ext4.dat
 
-OVER_MID_DATA = \
-	./out_empty_final_ext2.dat \
-	./out_empty_final_ext3.dat \
-	./out_empty_final_ext4.dat
+OVER_MID_DATA = ./out_empty_final_ext2.dat \
+	./out_empty_final_ext3.dat ./out_empty_final_ext4.dat
 
 MID_DATA = \
 	$(PERF_MID_DATA) \
@@ -95,15 +52,63 @@ DATA = \
 	$(PERFORMANCE) \
 	$(OVERHEAD)
 
-PERFORMANCE = \
-	./out_raw_ext2.dat \
-	./out_raw_ext3.dat \
-	./out_raw_ext4.dat
+PERFORMANCE = ./out_raw_ext2.dat \
+	./out_raw_ext3.dat ./out_raw_ext4.dat
 
-OVERHEAD = \
-	./out_raw_empty_ext2.dat \
-	./out_raw_empty_ext3.dat \
-	./out_raw_empty_ext4.dat
+OVERHEAD = ./out_raw_empty_ext2.dat \
+	./out_raw_empty_ext3.dat ./out_raw_empty_ext4.dat
+
+#Previous results gathered from original test platform
+PREV_GRAPHS = ./previous_results/meta_ext2_2GB.pdf ./previous_results/meta_ext2_4GB.pdf ./previous_results/meta_ext2_8GB.pdf \
+	./previous_results/meta_ext3_2GB.pdf ./previous_results/meta_ext3_4GB.pdf ./previous_results/meta_ext3_8GB.pdf \
+	./previous_results/meta_ext4_2GB.pdf ./previous_results/meta_ext4_4GB.pdf ./previous_results/meta_ext4_8GB.pdf \
+	./previous_results/read_ext2_2GB.pdf ./previous_results/read_ext2_4GB.pdf ./previous_results/read_ext2_8GB.pdf \
+	./previous_results/read_ext3_2GB.pdf ./previous_results/read_ext3_4GB.pdf ./previous_results/read_ext3_8GB.pdf \
+	./previous_results/read_ext4_2GB.pdf ./previous_results/read_ext4_4GB.pdf ./previous_results/read_ext4_8GB.pdf \
+	./previous_results/write_ext2_2GB.pdf ./previous_results/write_ext2_4GB.pdf ./previous_results/write_ext2_8GB.pdf \
+	./previous_results/write_ext3_2GB.pdf ./previous_results/write_ext3_4GB.pdf ./previous_results/write_ext3_8GB.pdf \
+	./previous_results/write_ext4_2GB.pdf ./previous_results/write_ext4_4GB.pdf ./previous_results/write_ext4_8GB.pdf \
+	./previous_results/create_ext2.pdf ./previous_results/create_ext3.pdf ./previous_results/create_ext4.pdf \
+	./previous_results/delete_ext2.pdf ./previous_results/delete_ext3.pdf ./previous_results/delete_ext4.pdf
+
+PREV_PERF_MID_GRAPHS = ./previous_results/meta_ext2_2GB.eps ./previous_results/meta_ext2_4GB.eps ./previous_results/meta_ext2_8GB.eps \
+	./previous_results/meta_ext3_2GB.eps ./previous_results/meta_ext3_4GB.eps ./previous_results/meta_ext3_8GB.eps \
+	./previous_results/meta_ext4_2GB.eps ./previous_results/meta_ext4_4GB.eps ./previous_results/meta_ext4_8GB.eps \
+	./previous_results/read_ext2_2GB.eps ./previous_results/read_ext2_4GB.eps ./previous_results/read_ext2_8GB.eps \
+	./previous_results/read_ext3_2GB.eps ./previous_results/read_ext3_4GB.eps ./previous_results/read_ext3_8GB.eps \
+	./previous_results/read_ext4_2GB.eps ./previous_results/read_ext4_4GB.eps ./previous_results/read_ext4_8GB.eps \
+	./previous_results/write_ext2_2GB.eps ./previous_results/write_ext2_4GB.eps ./previous_results/write_ext2_8GB.eps \
+	./previous_results/write_ext3_2GB.eps ./previous_results/write_ext3_4GB.eps ./previous_results/write_ext3_8GB.eps \
+	./previous_results/write_ext4_2GB.eps ./previous_results/write_ext4_4GB.eps ./previous_results/write_ext4_8GB.eps
+
+PREV_OVER_MID_GRAPHS = ./previous_results/create_ext2.eps \
+	./previous_results/create_ext3.eps ./previous_results/create_ext4.eps \
+	./previous_results/delete_ext2.eps ./previous_results/delete_ext3.eps \
+	./previous_results/delete_ext4.eps
+
+PREV_MID_GRAPHS = \
+	$(PREV_PERF_MID_GRAPHS) \
+	$(PREV_OVER_MID_GRAPHS)
+
+PREV_PERF_MID_DATA = ./previous_results/out_final_ext2.dat \
+	./previous_results/out_final_ext3.dat ./previous_results/out_final_ext4.dat
+
+PREV_OVER_MID_DATA = ./previous_results/out_empty_final_ext2.dat \
+	./previous_results/out_empty_final_ext3.dat ./previous_results/out_empty_final_ext4.dat
+
+PREV_MID_DATA = \
+	$(PREV_PERF_MID_DATA) \
+	$(PREV_OVER_MID_DATA)
+
+PREV_DATA = \
+	$(PREV_PERFORMANCE) \
+	$(PREV_OVERHEAD)
+
+PREV_PERFORMANCE = ./previous_results/out_raw_ext2.dat \
+	./previous_results/out_raw_ext3.dat ./previous_results/out_raw_ext4.dat
+
+PREV_OVERHEAD = ./previous_results/out_raw_empty_ext2.dat \
+	./previous_results/out_raw_empty_ext3.dat ./previous_results/out_raw_empty_ext4.dat
 
 TEST = ./src/test
 
@@ -113,7 +118,7 @@ PROG = ./src/benchmark
 CCTOOLS = ./cctools_source
 TAR = $(LIB) $(PROG)
 
-all: $(TAR) $(PAPER)
+all: $(GRAPHS) $(PAPER)
 
 $(CCTOOLS):
 	git clone git://github.com/$(REPO)
@@ -165,10 +170,23 @@ $(OVER_MID_DATA): $(OVERHEAD)
 $(MID_GRAPHS): $(MID_DATA) 
 	gnuplot ./plot_results.gnuplot
 
+$(PREV_PERF_MID_DATA): $(PREV_PERFORMANCE)
+	perl ./generate_graph_data.pl ./previous_results/out_raw_ext4.dat ./previous_results/out_final_ext4
+	perl ./generate_graph_data.pl ./previous_results/out_raw_ext3.dat ./previous_results/out_final_ext3
+	perl ./generate_graph_data.pl ./previous_results/out_raw_ext2.dat ./previous_results/out_final_ext2
+
+$(PREV_OVER_MID_DATA): $(PREV_OVERHEAD)
+	perl ./generate_alloc_graph_data.pl ./previous_results/out_raw_empty_ext4.dat ./previous_results/out_empty_final_ext4
+	perl ./generate_alloc_graph_data.pl ./previous_results/out_raw_empty_ext3.dat ./previous_results/out_empty_final_ext3
+	perl ./generate_alloc_graph_data.pl ./previous_results/out_raw_empty_ext2.dat ./previous_results/out_empty_final_ext2
+
+$(PREV_MID_GRAPHS): $(PREV_MID_DATA) 
+	cd ./previous_results && gnuplot ./plot_results.gnuplot
+
 %.pdf: %.eps
 	epstopdf $< --outfile=$@
 
-$(PAPER): ./paper.tex $(GRAPHS)
+$(PAPER): ./paper.tex $(PREV_GRAPHS)
 	pdflatex ./paper.tex
 
 paper: $(PAPER)
