@@ -6,6 +6,7 @@
 \usepackage{framed}
 \usepackage{floatrow}
 \usepackage{comment}
+\usepackage{hyperref}
 
 \hyphenation{op-tical net-works semi-conduc-tor}
 
@@ -80,13 +81,17 @@ Write performance maintains comparable performance to the native filesystem at a
 
 We note that the metadata micro-benchmark's performance is notably faster for the first four depth levels due to the asynchronous operation of loop devices. This behavior is enabled by default. Since metadata performance is measured by how quickly 10,000 empty files are instantiated, we note this asynchronous batching method is quicker for metadata operations. As is the case with the other two micro-benchmakrs, the metadata performance of a loop device relative to the native filesystem drops off at higher nest levels. In our metadata testing, this drop off occurs at a nest depth of five. Like in the read and write results, the user would have to determine if the slower performance is worth the resource guarantees should their workflow execute at high nest depths.
 
+The results presented in Figure \ref{fig:create} display the median value of each sandbox size's creation time. Like in the throughput performance results, we have provided the median absolute deviation for each sandbox size. We can see a proportional linear increase in creation time as the sandbox size increases which is expected. The smaller sandbox sizes (< 1GB) take very little time to instantiate with 512MB taking approximately six seconds to set up. This small overhead should have minimal impact upon performance except in cases where the task would run in a matter of a few seconds where the overhead for instantiating a loop device could double the duration of a task. Considering larger allocations, we see that the overhead is still quite reasonable. 1GB sandboxes across all three ext filesystems show a creation overhead of approximately eleven seconds. On the high end of our testing spectrum, we see an 8GB allocation having a seventy second instantiation duration. In normal cases, we notice that allocations of 8GB or greater experience computation on the order of tens of minutes or longer, so the creation overhead does not seem to dominate a task's duration. In certain cases, however, only a small fraction of the data passed into the sandbox will be relevant to computation. In this case, the creation overhead may be as great as the time spent on computation. We note that file transfer for the data would dominate a task's duration in this case and not the loop device instantiation.
+
+Loop device deletion seems to be almost trivial in duration. In our implementation, the sandbox is dereferenced once the task is complete. In the future, we may opt to overwrite the disk space consumed by the sandbox with zeros before dereferencing the pointers to the disk, however this was not a priority in the current implementation. In all instances of our deletion overhead testing, we can see that the time taken to remove a loop device is less than half a second. As is expected, the 8GB allocation took the longest to remove. In the lower end of our testing spectrum, we note that the smallest allocations took longer to remove than the mid-range allocation sizes in ext3 and ext4. We posit this may be due to handling within ext3 and ext4 which derefences very small files in a less efficient manner with a neglibgible performance decrease compared to a more advanced handling mechanism for larger files. The largest difference we observe is approximately 0.05 seconds between a 16MB and a 32MB allocation which is a speed no human user would likely notice.
+
 \subsection{Impact of Failure}
 Loop devices allow for a task to fail more cleanly than if it were not in a strict sandbox. The integrity of the host filesystem is not in as much danger of compromise. In the case of a failure, the loop device may become corrupted and unusable. In this case, the solution is to unmount and remove the loop device. This provides a benefit to the owner of the failed batch job task since the host machine will still be available for future work. Considering an incident without loop devices being used, it is possible that extreme failure can cause problems with the host filesystem precisely because the task is not isolated within its own storage constrained sandbox. All but the most catastrophic failures are contained within a loop device, and it exits cleanly.
 
 \section{Reproducibility Considerations}
 Although this experiment is primarily intended to demonstrate the viability of loop devices for storage constraint, we also make special considerations for the reproducibility of the experiment. In particular, we have already documented a comprehensive specification of the disk used in our test platform. To achieve greater reproducibility however, we must create a near-exact replica of the test platform. This can be done with a virtual machine which will be able to simulate not only the software of the test machine but also the hardware and kernel. The next step toward reproducibility of this work would be for us to host an image of our test platform freely available.
 
-Availability of the experiment is an important consideration for reproducibility. We have provided the source code, which is freely available on GitHub at {\tt{https://github.com/cooperative-computing-lab/disk-alloc-experiment}}. Within this git repository we have included the data collected for this technical report and a convenient Makefile which makes running the experiment quite simple. This Makefile downloads all the dependent code for the experiment except some software listed in the {\tt{README}} located in the repository as well as runs the specified tests, generates graphs from the test data, and compiles this paper. We chose to provide this depth of content because reproducibility and availability are high priorities with respect to this technical report.
+Availability of the experiment is an important consideration for reproducibility. We have provided the source code, which is freely available on GitHub at {\url{https://github.com/cooperative-computing-lab/disk-alloc-experiment}}. Within this git repository we have included the data collected for this technical report and a convenient Makefile which makes running the experiment quite simple. This Makefile downloads all the dependent code for the experiment except some software listed in the {\tt{README}} located in the repository as well as runs the specified tests, generates graphs from the test data, and compiles this paper. We chose to provide this depth of content because reproducibility and availability are high priorities with respect to this technical report.
 
 Another consideration for reproducibility is the anticipated runtime of the tests. In particular, the performance tests (read, write, and file metadata tests) took approximately two weeks to complete on the test platform. This was due to the twenty iterations taken on each test which ran to a nest depth of twenty. This was a heavy I/O load for the test platform. However, the overhead tests (creation and deletion tests) took much less time to run at approximately two hours. The vast difference between the two comes from the lack of nest performance taken into account by the overhead tests.
 
@@ -101,8 +106,8 @@ ext2 & \cimage{./previous_results/create_ext2.pdf} & \cimage{./previous_results/
 ext3 & \cimage{./previous_results/create_ext3.pdf} & \cimage{./previous_results/delete_ext3.pdf}\\
 ext4 & \cimage{./previous_results/create_ext4.pdf} & \cimage{./previous_results/delete_ext4.pdf}\\
 \end{tabular}
-\label{fig:create}
 \caption{Loop Device Creation/Deletion Overhead}
+\label{fig:create}
 \end{figure*}
 
 \newpage
@@ -112,8 +117,8 @@ ext2 & \cimage{./previous_results/read_ext2_2GB.pdf} & \cimage{./previous_result
 ext3 & \cimage{./previous_results/read_ext3_2GB.pdf} & \cimage{./previous_results/write_ext3_2GB.pdf} & \cimage{./previous_results/meta_ext3_2GB.pdf}\\
 ext4 & \cimage{./previous_results/read_ext4_2GB.pdf} & \cimage{./previous_results/write_ext4_2GB.pdf} & \cimage{./previous_results/meta_ext4_2GB.pdf}\\
 \end{tabular}
-\label{fig:2gb}
 \caption{Loop Device Performance with 2GB Allocations}
+\label{fig:2gb}
 \end{figure*}
 
 \begin{figure*}[t]
@@ -122,8 +127,8 @@ ext2 & \cimage{./previous_results/read_ext2_4GB.pdf} & \cimage{./previous_result
 ext3 & \cimage{./previous_results/read_ext3_4GB.pdf} & \cimage{./previous_results/write_ext3_4GB.pdf} & \cimage{./previous_results/meta_ext3_4GB.pdf}\\
 ext4 & \cimage{./previous_results/read_ext4_4GB.pdf} & \cimage{./previous_results/write_ext4_4GB.pdf} & \cimage{./previous_results/meta_ext4_4GB.pdf}\\
 \end{tabular}
-\label{fig:4gb}
 \caption{Loop Device Performance with 4GB Allocations}
+\label{fig:4gb}
 \end{figure*}
 
 \begin{figure*}[t]
@@ -132,8 +137,8 @@ ext2 & \cimage{./previous_results/read_ext2_8GB.pdf} & \cimage{./previous_result
 ext3 & \cimage{./previous_results/read_ext3_8GB.pdf} & \cimage{./previous_results/write_ext3_8GB.pdf} & \cimage{./previous_results/meta_ext3_8GB.pdf}\\
 ext4 & \cimage{./previous_results/read_ext4_8GB.pdf} & \cimage{./previous_results/write_ext4_8GB.pdf} & \cimage{./previous_results/meta_ext4_8GB.pdf}\\
 \end{tabular}
-\label{fig:8gb}
 \caption{Loop Device Performance with 8GB Allocations}
+\label{fig:8gb}
 \end{figure*}
 
 \ifCLASSOPTIONcaptionsoff
