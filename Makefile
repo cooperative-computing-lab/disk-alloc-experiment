@@ -38,8 +38,9 @@ MID_GRAPHS = \
 	$(PERF_MID_GRAPHS) \
 	$(OVER_MID_GRAPHS)
 
-PERF_MID_DATA = ./out_final_ext2.dat \
-	./out_final_ext3.dat ./out_final_ext4.dat
+PERF_MID_DATA = ./out_final_ext2_2GB.dat ./out_final_ext2_4GB.dat ./out_final_ext2_8GB.dat \
+	./out_final_ext3_2GB.dat ./out_final_ext3_4GB.dat ./out_final_ext3_8GB.dat \
+	./out_final_ext4_2GB.dat ./out_final_ext4_4GB.dat ./out_final_ext4_8GB.dat
 
 OVER_MID_DATA = ./out_empty_final_ext2.dat \
 	./out_empty_final_ext3.dat ./out_empty_final_ext4.dat
@@ -90,8 +91,9 @@ PREV_MID_GRAPHS = \
 	$(PREV_PERF_MID_GRAPHS) \
 	$(PREV_OVER_MID_GRAPHS)
 
-PREV_PERF_MID_DATA = ./previous_results/out_final_ext2.dat \
-	./previous_results/out_final_ext3.dat ./previous_results/out_final_ext4.dat
+PREV_PERF_MID_DATA = ./previous_results/out_final_ext2_2GB.dat ./previous_results/out_final_ext2_4GB.dat ./previous_results/out_final_ext2_8GB.dat \
+	./previous_results/out_final_ext3_2GB.dat ./previous_results/out_final_ext3_4GB.dat ./previous_results/out_final_ext3_8GB.dat \
+	./previous_results/out_final_ext4_2GB.dat ./previous_results/out_final_ext4_4GB.dat ./previous_results/out_final_ext4_8GB.dat 
 
 PREV_OVER_MID_DATA = ./previous_results/out_empty_final_ext2.dat \
 	./previous_results/out_empty_final_ext3.dat ./previous_results/out_empty_final_ext4.dat
@@ -109,6 +111,9 @@ PREV_PERFORMANCE = ./previous_results/out_raw_ext2.dat \
 
 PREV_OVERHEAD = ./previous_results/out_raw_empty_ext2.dat \
 	./previous_results/out_raw_empty_ext3.dat ./previous_results/out_raw_empty_ext4.dat
+
+MISC_FILES = ./previous_results/out.txt \
+	./paper.out ./paper.aux ./paper.log
 
 TEST = ./src/test
 
@@ -208,10 +213,10 @@ performance: $(PERFORMANCE)
 overhead: $(OVERHEAD)
 
 clean celan:
-	rm -rf $(OBJ) $(TAR) $(MID_DATA) $(MID_GRAPHS) $(DATA) $(GRAPHS) ./*.dat ./*.eps ./*.pdf ./paper.aux ./paper.log ./cctools_source ./cctools
+	rm -rf $(OBJ) $(TAR) $(MID_DATA) $(MID_GRAPHS) $(DATA) $(GRAPHS) $(PREV_PERF_MID_DATA) $(PREV_OVER_MID_DATA) $(PREV_MID_GRAPHS) $(PREV_GRAPHS) $(MISC_FILES) ./cctools_source ./cctools
 
 lean:
-	rm -rf ./*.pdf ./*.eps ./out_*final*.dat
+	rm -rf $(MID_GRAPHS) $(GRAPHS) $(PREV_MID_GRAPHS) $(PREV_GRAPHS) $(PAPER) $(MISC_FILES)
 
 .PHONY: all small clean lean celan
 
