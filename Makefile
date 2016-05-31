@@ -1,6 +1,5 @@
 CC=gcc
 CFLAGS=-Wall -g
-AR=ar
 DTTOOLS = ./cctools_source/dttools/src
 LDDFLAGS = -L./cctools_source/dttools/src -ldttools -lm
 REPO = cooperative-computing-lab/cctools
@@ -115,25 +114,20 @@ PREV_OVERHEAD = ./previous_results/out_raw_empty_ext2.dat \
 MISC_FILES = ./previous_results/out.txt \
 	./paper.out ./paper.aux ./paper.log
 
-TEST = ./src/test
+INTERRUPT = ./out_raw.dat ./out_raw_empty.dat
 
 PAPER = ./paper.pdf
 LIB = ./cctools_source/dttools/src/libdttools.a
 PROG = ./src/benchmark
 CCTOOLS = ./cctools_source
-TAR = $(LIB) $(PROG)
 
 all: $(GRAPHS) $(PAPER)
 
-$(CCTOOLS):
+$(CCTOOLS) $(LIB):
 	git clone git://github.com/$(REPO)
 	cd ./cctools && git checkout $(COMMIT)
 	mv ./cctools ./cctools_source
 	cd ./cctools_source && ./configure && make all
-
-$(LIB): $(CCTOOLS)
-	$(AR) -rv $(LIB) $(SRC)
-	ranlib $(LIB)
 
 $(PROG): $(LIB)
 	$(CC) $(CFLAGS) ./src/benchmark.c -I $(DTTOOLS) $(LDDFLAGS) -o $@
@@ -202,21 +196,19 @@ graphs: $(GRAPHS)
 
 mid_graphs: $(MID_GRAPHS)
 
-build: $(LIB) $(PROG)
+build: $(PROG)
 
 benchmark: $(DATA)
-
-source: $(TEST)
 
 performance: $(PERFORMANCE)
 
 overhead: $(OVERHEAD)
 
 clean celan:
-	rm -rf $(OBJ) $(TAR) $(MID_DATA) $(MID_GRAPHS) $(DATA) $(GRAPHS) $(PREV_PERF_MID_DATA) $(PREV_OVER_MID_DATA) $(PREV_MID_GRAPHS) $(PREV_GRAPHS) $(MISC_FILES) ./cctools_source ./cctools
+	rm -rf $(OBJ) $(PROG) $(MID_DATA) $(MID_GRAPHS) $(DATA) $(GRAPHS) $(PREV_PERF_MID_DATA) $(PREV_OVER_MID_DATA) $(PREV_MID_GRAPHS) $(PREV_GRAPHS) $(PAPER) $(INTERRUPT) $(MISC_FILES) $(CCTOOLS) ./cctools
 
 lean:
-	rm -rf $(MID_GRAPHS) $(GRAPHS) $(PREV_MID_GRAPHS) $(PREV_GRAPHS) $(PAPER) $(MISC_FILES)
+	rm -rf $(MID_GRAPHS) $(GRAPHS) $(PREV_MID_GRAPHS) $(PREV_GRAPHS) $(PAPER) $(INTERRUPT) $(MISC_FILES)
 
 .PHONY: all small clean lean celan
 
